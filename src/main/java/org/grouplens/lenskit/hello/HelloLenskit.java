@@ -41,8 +41,7 @@ import org.grouplens.lenskit.eval.data.crossfold.CrossfoldTask;
 import org.grouplens.lenskit.eval.data.traintest.GenericTTDataBuilder;
 import org.grouplens.lenskit.eval.data.traintest.GenericTTDataSet;
 import org.grouplens.lenskit.eval.data.traintest.TTDataSet;
-import org.grouplens.lenskit.eval.metrics.predict.CoveragePredictMetric;
-import org.grouplens.lenskit.eval.metrics.predict.RMSEPredictMetric;
+import org.grouplens.lenskit.eval.metrics.predict.*;
 import org.grouplens.lenskit.eval.script.EvalScript;
 import org.grouplens.lenskit.eval.traintest.MetricFactory;
 import org.grouplens.lenskit.eval.traintest.SimpleEvaluator;
@@ -87,6 +86,35 @@ public class HelloLenskit implements Runnable {
     private File inputFile = new File("ratings.dat");
     private List<Long> users;
 
+
+    private static void set_config(LenskitConfiguration config){
+        config.bind(ItemScorer.class)
+                .to(UserUserItemScorer.class);
+        config.bind(BaselineScorer.class, ItemScorer.class)
+                .to(UserMeanItemScorer.class);
+        config.bind(UserMeanBaseline.class, ItemScorer.class)
+                .to(ItemMeanRatingItemScorer.class);
+        config.bind(UserVectorNormalizer.class)
+                .to(BaselineSubtractingUserVectorNormalizer.class);
+        config.set(NeighborhoodSize.class).to(30);
+        config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
+
+    }
+
+    private static void set_config_mean_predictor(LenskitConfiguration config){
+        config.bind(ItemScorer.class)
+                .to(UserMeanItemScorer.class);
+        config.bind(BaselineScorer.class, ItemScorer.class)
+                .to(UserMeanItemScorer.class);
+        config.bind(UserMeanBaseline.class, ItemScorer.class)
+                .to(ItemMeanRatingItemScorer.class);
+        config.bind(UserVectorNormalizer.class)
+                .to(BaselineSubtractingUserVectorNormalizer.class);
+        config.set(NeighborhoodSize.class).to(30);
+        config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
+    }
+
+
     public HelloLenskit(String[] args) {
         int nextArg = 0;
         boolean done = false;
@@ -113,14 +141,18 @@ public class HelloLenskit implements Runnable {
         // We first need to configure the data access.
         // We will use a simple delimited file; you can use something else like
         // a database (see JDBCRatingDAO).
-        EventDAO dao = new SimpleFileRatingDAO(inputFile, delimiter);
+        /*
 
-        // Second step is to create the LensKit configuration...
+
+
+        EventDAO dao = new SimpleFileRatingDAO(inputFile, delimiter);
         LenskitConfiguration config = new LenskitConfiguration();
+        // Second step is to create the LensKit configuration...
+        //LenskitConfiguration config = new LenskitConfiguration();
         // ... configure the data source
         config.addComponent(dao);
 
-        /*
+
         // ... and configure the item scorer.  The bind and set methods
         // are what you use to do that. Here, we want an item-item scorer.
         config.bind(ItemScorer.class)
@@ -137,8 +169,6 @@ public class HelloLenskit implements Runnable {
         // and normalize ratings by baseline prior to computing similarities
         config.bind(UserVectorNormalizer.class)
               .to(BaselineSubtractingUserVectorNormalizer.class);
-        */
-
 
 
         // ... and configure the item scorer.  The bind and set methods
@@ -156,7 +186,6 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
 
         // normalize by subtracting the user's mean rating. Added by jeremy
-        //config.within(UserVectorNormalizer.class).bind(VectorNormalizer.class).to(MeanCenteringVectorNormalizer.class);
 
         // and normalize ratings by baseline prior to computing similarities
         config.bind(UserVectorNormalizer.class)
@@ -168,8 +197,13 @@ public class HelloLenskit implements Runnable {
 
         //THIS IS WHERE THE ALGORITHM IS ACTIVATED
         //change the vector similarity thing
-        config.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
+        //config.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
         //config.bind(VectorSimilarity.class).to(DistanceVectorSimilarity.class);
+        //config.bind(VectorSimilarity.class).to(DodgyDistance.class);
+        config.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
+        //config.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+
+
 
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
 
@@ -180,57 +214,55 @@ public class HelloLenskit implements Runnable {
         // and data source. This will compute the similarity matrix and return a recommender
         // that uses it.
 
-        //TrainTestEvalTask task = new TrainTestEvalTask();
-        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_norm", config);
-        //task.addAlgorithm(diffusion_algo);
-        //GenericTTDataBuilder builder = new GenericTTDataBuilder();
+        */
+
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        set_config(config_reg);
+        config_reg.bind(VectorSimilarity.class).to(DodgyDistance.class);
+
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+        set_config(config_diff);
+        config_diff.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
+
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        set_config(config_diff_n);
+        config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionDistanceVectorSimilarity.class);
+
+        LenskitConfiguration config_mean = new LenskitConfiguration();
+        set_config_mean_predictor(config_mean);
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_distance", config_reg);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_distance", config_diff);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_distance", config_diff_n);
+        AlgorithmInstance simple_mean_algo = new AlgorithmInstance("simple_mean", config_mean);
 
         SimpleEvaluator simpleEval = new SimpleEvaluator();
         simpleEval.addAlgorithm(diffusion_algo);
+        //simpleEval.addAlgorithm(regular_algo);
+        //simpleEval.addAlgorithm(diffusion_norm_algo);
+        //simpleEval.addAlgorithm(simple_mean_algo);
 
         File in = new File("ml-100k/u.data");
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
         builder.setDelimiter("\t");
         CSVDataSource dat = builder.build();
-        System.out.println(dat.getDelimiter());
 
-        simpleEval.addDataset(dat,5,10);
+        simpleEval.addDataset(dat,5,0.2);
         RMSEPredictMetric rmse = new RMSEPredictMetric();
-        simpleEval.addMetric(rmse);
-        File out = new File("results.dat");
-        simpleEval.setOutput(out);
+        CoveragePredictMetric cover = new CoveragePredictMetric();
+        NDCGPredictMetric ndcg = new NDCGPredictMetric();
 
+        simpleEval.addMetric(rmse);
+        simpleEval.addMetric(cover);
+        simpleEval.addMetric(ndcg);
+
+        File out = new File("results.csv");
+        simpleEval.setOutput(out);
         try{
             simpleEval.call();
         } catch (Exception e){
             System.out.println(e.getMessage());
         }
-
-        Recommender rec = null;
-        try {
-            rec = LenskitRecommender.build(config);
-        } catch (RecommenderBuildException e) {
-            throw new RuntimeException("recommender build failed", e);
-        }
-
-        /*
-        // we want to recommend items
-        ItemRecommender irec = rec.getItemRecommender();
-        assert irec != null; // not null because we configured one
-        // for users
-        for (long user: users) {
-            // get 10 recommendation for the user
-            List<ScoredId> recs = irec.recommend(user, 40);
-            System.out.format("Recommendations for %d:\n", user);
-            for (ScoredId item: recs) {
-                System.out.format("\t%d\t%.2f\n", item.getId(), item.getScore());
-            }
-        }
-        */
-
-
-
-
 
     }
 }

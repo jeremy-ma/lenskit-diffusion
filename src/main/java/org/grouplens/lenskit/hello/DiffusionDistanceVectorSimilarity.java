@@ -11,6 +11,9 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
+
 import javax.inject.Inject;
 
 /**
@@ -18,13 +21,13 @@ import javax.inject.Inject;
  */
 public class DiffusionDistanceVectorSimilarity implements VectorSimilarity {
     private RealMatrix diffMatrix = null;
-
+    private HashMap<SparseVector, ArrayRealVector> cache = null;
     @Inject
     public DiffusionDistanceVectorSimilarity(){
         //read in the matrix
         try{
-            MatFileReader reader = new MatFileReader("ml100k_diffusion_norm.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diffusion_norm");
+            MatFileReader reader = new MatFileReader("ml100k_diff.mat");
+            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff");
             double [][] diffusion = red.getArray();
             this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");
@@ -33,6 +36,10 @@ public class DiffusionDistanceVectorSimilarity implements VectorSimilarity {
             System.out.println(e.getMessage());
             System.out.println("Failed to read in the diffusion matrix");
         }
+
+        //initialise the cache
+        cache = new HashMap<SparseVector, ArrayRealVector>();
+
     }
 
     /**
@@ -44,32 +51,54 @@ public class DiffusionDistanceVectorSimilarity implements VectorSimilarity {
      */
     @Override
     public double similarity(SparseVector vec1, SparseVector vec2) {
-        ArrayRealVector v1 = new ArrayRealVector(1682);
-        ArrayRealVector v2 = new ArrayRealVector(1682);
 
-        for (VectorEntry v:vec1){
-            v1.setEntry((int)v.getKey()-1,v.getValue());
+        ArrayRealVector v_diff;
+        ArrayRealVector w_diff;
+
+        if (( v_diff = this.cache.get(vec1) ) == null){
+            v_diff = this.getDiffused(vec1);
+            this.cache.put(vec1,v_diff);
         }
-        for (VectorEntry v:vec2){
-            try{
-                v2.setEntry((int)v.getKey()-1,v.getValue());
-            } catch (Exception e){
-                System.out.println(v.getKey());
-                throw new IllegalArgumentException("asdf");
-            }
 
+        if (( w_diff = this.cache.get(vec2) ) == null){
+            w_diff = this.getDiffused(vec2);
+            this.cache.put(vec2,w_diff);
         }
-        ArrayRealVector v_diff = (ArrayRealVector) this.diffMatrix.preMultiply(v1);
-        ArrayRealVector w_diff = (ArrayRealVector) this.diffMatrix.preMultiply(v2);
 
-        v_diff = (ArrayRealVector) v_diff.unitVector();
-        w_diff = (ArrayRealVector) w_diff.unitVector();
+        if (v_diff.getNorm() > 0) {
+            v_diff = (ArrayRealVector) v_diff.unitVector();
+        }
+        if (w_diff.getNorm() >0){
+            w_diff = (ArrayRealVector) w_diff.unitVector();
+        }
 
         //System.out.println((1.37-v_diff.subtract(w_diff).getNorm())*5);
+        ArrayRealVector v_w = v_diff.subtract(w_diff);
+        double distance = v_diff.subtract(w_diff).getNorm();
 
-        return ((1.37-v_diff.subtract(w_diff).getNorm())*5);
+
+        if (distance != v_w.getNorm()){
+            System.out.println("Ooops!");
+        }
+        return ((1.37-5*distance));
+        //return 1-distance;
+    }
+
+    private ArrayRealVector getDiffused(SparseVector v){
+        ArrayRealVector w = new ArrayRealVector(this.diffMatrix.getColumnDimension());
+        for (VectorEntry entry:v){
+
+            w.setEntry((int) entry.getKey() - 1, entry.getValue());
+        }
+
+        //System.out.println(v);
+
+        ArrayRealVector w_diff = (ArrayRealVector) this.diffMatrix.preMultiply(w);
+
+        return w_diff;
 
     }
+
 
     @Override
     public boolean isSparse() {

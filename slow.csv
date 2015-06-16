@@ -1,0 +1,6 @@
+Algorithm,DataSet,Partition,BuildTime,TestTime,RMSE.ByUser,RMSE.ByRating,NUsers,NAttempted,NGood,Coverage,nDCG
+diffusion_distance,ml-100k/u.data,0,487,851089,0.997710757,0.999711768,189,4107,4107,1,0.938749157
+diffusion_distance,ml-100k/u.data,1,182,778649,0.994351079,1.034524805,189,3992,3992,1,0.936196083
+diffusion_distance,ml-100k/u.data,2,226,833290,0.970548204,1.011648348,189,4125,4125,1,0.940382567
+diffusion_distance,ml-100k/u.data,3,189,760113,0.979235231,0.981993883,188,3632,3632,1,0.942902028
+diffusion_distance,ml-100k/u.data,4,198,798371,0.975098724,1.012062093,188,4144,4144,1,0.936127123

@@ -16,16 +16,16 @@ import java.util.HashMap;
 /**
  * Created by jeremyma on 19/04/15.
  */
-public class DiffusionCosineVectorSimilarity implements VectorSimilarity {
+public class NormDiffusionCosineVectorSimilarity implements VectorSimilarity {
     private RealMatrix diffMatrix = null;
     private HashMap<SparseVector, ArrayRealVector> cache = null;
 
     @Inject
-    public DiffusionCosineVectorSimilarity(){
+    public NormDiffusionCosineVectorSimilarity(){
         //read in the matrix
         try{
-            MatFileReader reader = new MatFileReader("ml100k_diff.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff");
+            MatFileReader reader = new MatFileReader("ml100k_diff_n.mat");
+            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff_n");
             double [][] diffusion = red.getArray();
             this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");
@@ -47,7 +47,6 @@ public class DiffusionCosineVectorSimilarity implements VectorSimilarity {
         ArrayRealVector w_diff;
 
         if (( v_diff = this.cache.get(vec1) ) == null){
-
             v_diff = this.getDiffused(vec1);
 
             this.cache.put(vec1,v_diff);
@@ -61,11 +60,9 @@ public class DiffusionCosineVectorSimilarity implements VectorSimilarity {
         if (v_diff.getNorm() > 0) {
             v_diff = (ArrayRealVector) v_diff.unitVector();
         }
-        if (w_diff.getNorm() > 0) {
+        if (w_diff.getNorm() >0){
             w_diff = (ArrayRealVector) w_diff.unitVector();
         }
-        //System.out.print(v_diff.getNorm());
-        //System.out.print("            ");
         //System.out.println(w_diff.getNorm());
 
         //System.out.println((1.37-v_diff.subtract(w_diff).getNorm())*5);
@@ -82,7 +79,6 @@ public class DiffusionCosineVectorSimilarity implements VectorSimilarity {
         ArrayRealVector w_diff = (ArrayRealVector) this.diffMatrix.preMultiply(w);
 
         return w_diff;
-
     }
 
     public boolean isSymmetric(){

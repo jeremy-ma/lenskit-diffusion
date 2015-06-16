@@ -3,8 +3,13 @@ import scipy.io
 from scipy.sparse import csgraph
 
 
+
+
 if __name__ == '__main__':
+
     diffmat = scipy.io.loadmat('ml100k_difference.mat')['ml100k_difference']
+
+    #diffmat = scipy.io.loadmat('ml10M_500_difference.mat')['ml10M_500_difference']
 
     #set zeros to 0.001
     diffmat[diffmat==0] = 0.001
@@ -16,22 +21,22 @@ if __name__ == '__main__':
 
     # calculate diffusion rates
     #set alpha_nL
-    alpha_nL = 0.01
+    alpha_nL = 0.001
 
     ratio_diagL_diagNL = L.diagonal().sum() / L_n.diagonal().sum()
     alpha_L = alpha_nL / ratio_diagL_diagNL
-
+    #alpha_L 5.5377e-07
 
     diff = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L)
     diff_n = np.linalg.inv(np.eye(len(simmat)) + alpha_nL * L_n)
+
+    #scipy.io.savemat('ml10M_diff.mat',mdict={'ml10M_diff':diff})
+    #scipy.io.savemat('ml10M_diff_n.mat',mdict={'ml10M_diff_n':diff_n})
 
     scipy.io.savemat('ml100k_diff.mat',mdict={'ml100k_diff':diff})
     scipy.io.savemat('ml100k_diff_n.mat',mdict={'ml100k_diff_n':diff_n})
 
     #b = scipy.io.loadmat('ml100k_diff.mat')
-
-
-
 
 
 
