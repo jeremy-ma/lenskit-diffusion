@@ -55,9 +55,8 @@ import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNo
 import org.grouplens.lenskit.transform.normalize.MeanCenteringVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.VectorNormalizer;
-import org.grouplens.lenskit.vectors.similarity.DistanceVectorSimilarity;
-import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
-import org.grouplens.lenskit.vectors.similarity.CosineVectorSimilarity;
+import org.grouplens.lenskit.vectors.similarity.*;
+import org.grouplens.lenskit.vectors.similarity.DiffusedPearsonCorrelation;
 
 import javax.activation.DataSource;
 import java.io.File;
@@ -110,7 +109,7 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
         config.bind(UserVectorNormalizer.class)
                 .to(BaselineSubtractingUserVectorNormalizer.class);
-        config.set(NeighborhoodSize.class).to(30);
+        config.set(NeighborhoodSize.class).to(60);
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
     }
 
@@ -218,28 +217,30 @@ public class HelloLenskit implements Runnable {
 
         LenskitConfiguration config_reg = new LenskitConfiguration();
         set_config(config_reg);
-        config_reg.bind(VectorSimilarity.class).to(DodgyDistance.class);
+        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
 
         LenskitConfiguration config_diff = new LenskitConfiguration();
         set_config(config_diff);
-        config_diff.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
+        config_diff.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
 
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         set_config(config_diff_n);
-        config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionDistanceVectorSimilarity.class);
+        config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionCosineVectorSimilarity.class);
+
+
 
         LenskitConfiguration config_mean = new LenskitConfiguration();
         set_config_mean_predictor(config_mean);
 
-        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_distance", config_reg);
-        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_distance", config_diff);
-        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_distance", config_diff_n);
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_cosine", config_reg);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffused_cosine", config_diff);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_cosine", config_diff_n);
         AlgorithmInstance simple_mean_algo = new AlgorithmInstance("simple_mean", config_mean);
 
         SimpleEvaluator simpleEval = new SimpleEvaluator();
         simpleEval.addAlgorithm(diffusion_algo);
-        //simpleEval.addAlgorithm(regular_algo);
-        //simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
         //simpleEval.addAlgorithm(simple_mean_algo);
 
         File in = new File("ml-100k/u.data");

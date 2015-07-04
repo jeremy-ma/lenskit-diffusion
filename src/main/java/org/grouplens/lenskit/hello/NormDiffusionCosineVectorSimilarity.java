@@ -24,8 +24,8 @@ public class NormDiffusionCosineVectorSimilarity implements VectorSimilarity {
     public NormDiffusionCosineVectorSimilarity(){
         //read in the matrix
         try{
-            MatFileReader reader = new MatFileReader("ml100k_diff_n.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff_n");
+            MatFileReader reader = new MatFileReader("ml100k_udiff_n.mat");
+            MLDouble red = (MLDouble) reader.getMLArray("ml100k_udiff_n");
             double [][] diffusion = red.getArray();
             this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");

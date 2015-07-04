@@ -26,8 +26,8 @@ public class DiffusionDistanceVectorSimilarity implements VectorSimilarity {
     public DiffusionDistanceVectorSimilarity(){
         //read in the matrix
         try{
-            MatFileReader reader = new MatFileReader("ml100k_diff.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff");
+            MatFileReader reader = new MatFileReader("ml100k_udiff.mat");
+            MLDouble red = (MLDouble) reader.getMLArray("ml100k_udiff");
             double [][] diffusion = red.getArray();
             this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");
@@ -80,8 +80,8 @@ public class DiffusionDistanceVectorSimilarity implements VectorSimilarity {
         if (distance != v_w.getNorm()){
             System.out.println("Ooops!");
         }
-        return ((1.37-5*distance));
-        //return 1-distance;
+        //return ((1.37-5*distance));
+        return 1-distance;
     }
 
     private ArrayRealVector getDiffused(SparseVector v){

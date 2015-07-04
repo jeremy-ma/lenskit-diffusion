@@ -24,8 +24,8 @@ public class DiffusionCosineVectorSimilarity implements VectorSimilarity {
     public DiffusionCosineVectorSimilarity(){
         //read in the matrix
         try{
-            MatFileReader reader = new MatFileReader("ml100k_diff.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_diff");
+            MatFileReader reader = new MatFileReader("ml100k_udiff.mat");
+            MLDouble red = (MLDouble) reader.getMLArray("ml100k_udiff");
             double [][] diffusion = red.getArray();
             this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");
