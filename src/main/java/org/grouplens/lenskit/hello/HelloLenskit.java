@@ -81,10 +81,9 @@ public class HelloLenskit implements Runnable {
         }
     }
 
-    private String delimiter = "\t";
-    private File inputFile = new File("ratings.dat");
-    private List<Long> users;
-
+    private String dataFileName = "ml-100k/u.data";
+    private String resultsFileName = "results.csv";
+    private String vectorSimilarityMeasure = "cosine";
 
     private static void set_config(LenskitConfiguration config){
         config.bind(ItemScorer.class)
@@ -109,141 +108,59 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
         config.bind(UserVectorNormalizer.class)
                 .to(BaselineSubtractingUserVectorNormalizer.class);
-        config.set(NeighborhoodSize.class).to(60);
+        config.set(NeighborhoodSize.class).to(40);
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
     }
 
 
     public HelloLenskit(String[] args) {
-        int nextArg = 0;
-        boolean done = false;
-        while (!done && nextArg < args.length) {
-            String arg = args[nextArg];
-            if (arg.equals("-d")) {
-                delimiter = args[nextArg + 1];
-                nextArg += 2;
-            } else if (arg.startsWith("-")) {
-                throw new RuntimeException("unknown option: " + arg);
-            } else {
-                inputFile = new File(arg);
-                nextArg += 1;
-                done = true;
-            }
+        if (args.length == 3) {
+            System.out.println("Running test with custom settings");
+            dataFileName = args[0];
+            resultsFileName = args[1];
+            vectorSimilarityMeasure = args[2];
+
+            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
+                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
+        } else {
+            System.out.println("Running test with default settings");
+            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
+                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
         }
-        users = new ArrayList<Long>(args.length - nextArg);
-        for (; nextArg < args.length; nextArg++) {
-            users.add(Long.parseLong(args[nextArg]));
-        }
+
+
     }
 
     public void run() {
-        // We first need to configure the data access.
-        // We will use a simple delimited file; you can use something else like
-        // a database (see JDBCRatingDAO).
-        /*
-
-
-
-        EventDAO dao = new SimpleFileRatingDAO(inputFile, delimiter);
-        LenskitConfiguration config = new LenskitConfiguration();
-        // Second step is to create the LensKit configuration...
-        //LenskitConfiguration config = new LenskitConfiguration();
-        // ... configure the data source
-        config.addComponent(dao);
-
-
-        // ... and configure the item scorer.  The bind and set methods
-        // are what you use to do that. Here, we want an item-item scorer.
-        config.bind(ItemScorer.class)
-              .to(UserItemBiasItemScorer.class);
-
-        // let's use personalized mean rating as the baseline/fallback predictor.
-        // 2-step process:
-        // First, use the user mean rating as the baseline scorer
-        config.bind(BaselineScorer.class, ItemScorer.class)
-               .to(UserMeanItemScorer.class);
-        // Second, use the item mean rating as the base for user means
-        config.bind(UserMeanBaseline.class, ItemScorer.class)
-              .to(ItemMeanRatingItemScorer.class);
-        // and normalize ratings by baseline prior to computing similarities
-        config.bind(UserVectorNormalizer.class)
-              .to(BaselineSubtractingUserVectorNormalizer.class);
-
-
-        // ... and configure the item scorer.  The bind and set methods
-        // are what you use to do that. Here, we want an item-item scorer.
-        config.bind(ItemScorer.class)
-                .to(UserUserItemScorer.class);
-
-        // let's use personalized mean rating as the baseline/fallback predictor.
-        // 2-step process:
-        // First, use the user mean rating as the baseline scorer
-        config.bind(BaselineScorer.class, ItemScorer.class)
-                .to(UserMeanItemScorer.class);
-        // Second, use the item mean rating as the base for user means
-         config.bind(UserMeanBaseline.class, ItemScorer.class)
-                .to(ItemMeanRatingItemScorer.class);
-
-        // normalize by subtracting the user's mean rating. Added by jeremy
-
-        // and normalize ratings by baseline prior to computing similarities
-        config.bind(UserVectorNormalizer.class)
-                .to(BaselineSubtractingUserVectorNormalizer.class);
-
-
-        //set neighbourhood size
-        config.set(NeighborhoodSize.class).to(30);
-
-        //THIS IS WHERE THE ALGORITHM IS ACTIVATED
-        //change the vector similarity thing
-        //config.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
-        //config.bind(VectorSimilarity.class).to(DistanceVectorSimilarity.class);
-        //config.bind(VectorSimilarity.class).to(DodgyDistance.class);
-        config.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
-        //config.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
-
-
-
-        config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
-
-        // There are more parameters, roles, and components that can be set. See the
-        // JavaDoc for each recommender algorithm for more information.
-
-        // Now that we have a factory, build a recommender from the configuration
-        // and data source. This will compute the similarity matrix and return a recommender
-        // that uses it.
-
-        */
 
         LenskitConfiguration config_reg = new LenskitConfiguration();
         set_config(config_reg);
-        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
-
         LenskitConfiguration config_diff = new LenskitConfiguration();
         set_config(config_diff);
-        config_diff.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
-
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         set_config(config_diff_n);
-        config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionCosineVectorSimilarity.class);
 
+        if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
+            config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionCosineVectorSimilarity.class);
+            config_diff.set(DiffusionMatrixType.class).to("diffusion");
+        } else {
+            config_reg.bind(VectorSimilarity.class).to(DistanceVectorSimilarity.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionDistanceVectorSimilarity.class);
+        }
 
-
-        LenskitConfiguration config_mean = new LenskitConfiguration();
-        set_config_mean_predictor(config_mean);
-
-        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_cosine", config_reg);
-        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffused_cosine", config_diff);
-        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_cosine", config_diff_n);
-        AlgorithmInstance simple_mean_algo = new AlgorithmInstance("simple_mean", config_mean);
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity", config_reg);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity", config_diff);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_n);
 
         SimpleEvaluator simpleEval = new SimpleEvaluator();
         simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
         simpleEval.addAlgorithm(diffusion_norm_algo);
-        //simpleEval.addAlgorithm(simple_mean_algo);
 
-        File in = new File("ml-100k/u.data");
+        File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
         builder.setDelimiter("\t");
         CSVDataSource dat = builder.build();
@@ -252,13 +169,16 @@ public class HelloLenskit implements Runnable {
         RMSEPredictMetric rmse = new RMSEPredictMetric();
         CoveragePredictMetric cover = new CoveragePredictMetric();
         NDCGPredictMetric ndcg = new NDCGPredictMetric();
+        MAEPredictMetric mae = new MAEPredictMetric();
 
         simpleEval.addMetric(rmse);
         simpleEval.addMetric(cover);
         simpleEval.addMetric(ndcg);
+        simpleEval.addMetric(mae);
 
-        File out = new File("results.csv");
+        File out = new File(resultsFileName);
         simpleEval.setOutput(out);
+
         try{
             simpleEval.call();
         } catch (Exception e){
