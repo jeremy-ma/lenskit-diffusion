@@ -86,13 +86,18 @@ def transformation(similarity):
 def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
     # performs the calculations to create the diffusion matrices
 
-    # calculate absolute laplacian without thresholding
-    L_abs = np.zeros(simmat.shape)
-    for i in xrange(len(simmat)):
-        L_abs[i][i] = np.sum(np.abs(simmat[i,:]))
-    L_abs = L_abs - simmat
+    abs_threshold = find_threshold(np.abs(simmat), threshold_fraction)
+    copy = np.copy(simmat)
+    copy[np.logical_and(copy > -abs_threshold, copy < abs_threshold)] = 0.0
+    print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
 
-    # apply thresholding which reduces number of edges to the desired fraction
+    # calculate absolute laplacian with thresholding
+    L_abs = np.zeros(copy.shape)
+    for i in xrange(len(copy)):
+        L_abs[i][i] = np.sum(np.abs(copy[i,:]))
+    L_abs = L_abs - copy
+
+    # apply thresholding which reduces number of edges to the desired fraction for
     threshold = find_threshold(simmat, threshold_fraction)
     simmat[simmat < threshold] = 0.0
     print "{0} percent nonzero".format(np.count_nonzero(simmat)/float(len(simmat)**2) * 100.0 )
