@@ -6,7 +6,7 @@ from scipy.spatial.distance import cosine
 import sys, editdistance
 
 
-numUsers,numItems = 943, 1682
+defaultNumUsers,defaultNumItems = 943, 1682
 
 
 #create a utility matrix from a ratings file
@@ -23,7 +23,6 @@ def create_utility_matrix(filename, numUsers, numItems):
         rating = int(fields[2])
         utility[uid][movid] = rating
 
-        
     return utility
 
 def symmetrize(a):
@@ -38,10 +37,12 @@ def create_similarity_pearson_correlation(utility, numUsers, numItems):
         for j in xrange(i,numItems):
             #calculate the pearson correlation coefficient between two movies
             #print pearsonr(utility[:,i],utility[:,j])
+            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
+                continue
             corr, pval = pearsonr(utility[:,i],utility[:,j])
             similarity[i][j], similarity[j][i] = corr, corr
 
-    return ((similarity + 1.0)/2.0)**2
+    return similarity
 
 
 def create_similarity_cosine(utility, numUsers, numItems):
@@ -50,12 +51,12 @@ def create_similarity_cosine(utility, numUsers, numItems):
 
     for i in xrange(numItems):
         for j in xrange(i,numItems):
-            #calculate the pearson correlation coefficient between two movies
-            #print pearsonr(utility[:,i],utility[:,j])
+            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
+                continue
             sim = 1 - cosine(utility[:,i],utility[:,j])
             similarity[i][j], similarity[j][i] = sim, sim
 
-    return ((similarity + 1.0)/2.0)**2
+    return similarity
 
 def create_similarity_adjusted_cosine(utility,numUsers,numItems):
     # create similarity matrix using the adjusted cosine similarity measure
@@ -72,29 +73,46 @@ def create_similarity_adjusted_cosine(utility,numUsers,numItems):
         for j in xrange(i,numItems):
             #calculate the pearson correlation coefficient between two movies
             #print pearsonr(utility[:,i],utility[:,j])
+            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
+                continue
             sim = 1 - cosine(utility[:,i],utility[:,j])
             similarity[i][j], similarity[j][i] = sim, sim
 
-    return ((similarity + 1.0)/2.0)**2
+    return similarity
 
+def transformation(similarity):
+    return similarity
 
-def create_diffusion(simmat, alpha_nL=1.0):
-    # performs the calculations to create the diffusion matrix
+def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
+    # performs the calculations to create the diffusion matrices
+
+    # calculate absolute laplacian without thresholding
+    L_abs = np.zeros(simmat.shape)
+    for i in xrange(len(simmat)):
+        L_abs[i][i] = np.sum(np.abs(simmat[i,:]))
+    L_abs = L_abs - simmat
+
+    # apply thresholding which reduces number of edges to the desired fraction
+    threshold = find_threshold(simmat, threshold_fraction)
+    simmat[simmat < threshold] = 0.0
+    print "{0} percent nonzero".format(np.count_nonzero(simmat)/float(len(simmat)**2) * 100.0 )
+
+    # apply transformation function
     L = csgraph.laplacian(simmat, normed=False)
     L_n = csgraph.laplacian(simmat, normed=True)
 
     # calculate diffusion rates
-
     ratio_diagL_diagNL = L.diagonal().sum() / L_n.diagonal().sum()
     alpha_L = alpha_nL / ratio_diagL_diagNL
     #alpha_L 5.5377e-07
 
     diff = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L)
     diff_n = np.linalg.inv(np.eye(len(simmat)) + alpha_nL * L_n)
+    diff_abs = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L_abs)
 
-    return (diff, diff_n)
+    return (diff, diff_n, diff_abs)
 
-def main_similarity(sim_func ='cosine', filename='ml-100k/u.data'):
+def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', numUsers=defaultNumUsers, numItems=defaultNumItems):
     # writes similarity matrices to file
 
     print "generating utility matrix......"
@@ -109,13 +127,11 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data'):
     elif sim_func == 'pearson':
         similarity = create_similarity_pearson_correlation(utility, numUsers,numItems)
 
-
-
     scipy.io.savemat(sim_func + '_similarity_ml100k.mat', mdict={'similarity': similarity})
 
     print "done"
 
-def find_threshold(similarity, threshold_fraction):
+def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
     # binary search the correct threshold
 
     num_iters = 15;
@@ -140,27 +156,26 @@ def find_threshold(similarity, threshold_fraction):
     return mid
 
 
-def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3):
+def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, numItems=defaultNumItems, numUsers=defaultNumUsers):
     # this function creates and writes the diffusion matrix files
+
+    # use a similarity matrix which has nonzero values
     similarity = scipy.io.loadmat(sim_func + '_similarity_ml100k.mat')['similarity']
 
-    # apply thresholding which reduces number of edges to the desired fraction
-    threshold = find_threshold(similarity, threshold_fraction)
-
-    similarity[similarity < threshold] = 0.0
-
-    print "{0} percent nonzero".format(np.count_nonzero(similarity)/float(numItems**2) * 100.0 )
-
     print "creating diffusion matrix alpha_nL: " + str(alpha_nL)
-    diff, diff_n = create_diffusion(similarity, alpha_nL)
+    diff, diff_n, diff_abs = create_diffusion(similarity, alpha_nL,threshold_fraction)
     print "saving"
 
-    scipy.io.savemat('ml100k_udiff.mat',mdict={'ml100k_udiff':diff})
-    scipy.io.savemat('ml100k_udiff_n.mat',mdict={'ml100k_udiff_n':diff_n})
+    # save both the normalized and regular diffusion matrices
+    scipy.io.savemat('ml100k_udiff.mat',mdict={'diffusion':diff})
+    scipy.io.savemat('ml100k_udiff_n.mat',mdict={'diffusion':diff_n})
+    scipy.io.savemat('ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
+
 
 # removes the year and foreign language translation from the movie name
 def process_name(name):
     return name.rstrip()
+
 
 def isolate_name(name):
     return name.split('(')[0].rstrip()
@@ -230,14 +245,12 @@ def modify_ml100k_movienames():
                 line[1] = candidate
                 replacements.add(candidate)
 
-            
             print "######################"
+
         line = '|'.join(line)
         stuff.append(line)
 
     new.write(''.join(stuff))
-
-
 
 
 def reduce_ml10M_ml100k():
@@ -280,8 +293,6 @@ def reduce_ml10M_ml100k():
         if ml10M_movid in ml10M_to_ml100k:
             line[1] = str(ml10M_to_ml100k[ml10M_movid])
             new.write('\t'.join(line))
-
-    
 
 
 

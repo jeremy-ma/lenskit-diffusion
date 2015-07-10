@@ -139,26 +139,36 @@ public class HelloLenskit implements Runnable {
         set_config(config_diff);
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         set_config(config_diff_n);
+        LenskitConfiguration config_diff_abs = new LenskitConfiguration();
+        set_config(config_diff_abs);
+
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
-            config_diff.bind(VectorSimilarity.class).to(DiffusionCosineVectorSimilarity.class);
-            config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionCosineVectorSimilarity.class);
-            config_diff.set(DiffusionMatrixType.class).to("diffusion");
+            config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+            config_diff_abs.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
         } else {
             config_reg.bind(VectorSimilarity.class).to(DistanceVectorSimilarity.class);
-            config_diff.bind(VectorSimilarity.class).to(DiffusionDistanceVectorSimilarity.class);
-            config_diff_n.bind(VectorSimilarity.class).to(NormDiffusionDistanceVectorSimilarity.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusedDistanceVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedDistanceVectorSimilarity.class);
+            config_diff_abs.bind(VectorSimilarity.class).to(DiffusedDistanceVectorSimilarity.class);
         }
+
+        config_diff.set(DiffusionMatrixType.class).to("ml100k_udiff.mat");
+        config_diff_n.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
+        config_diff_abs.set(DiffusionMatrixType.class).to("ml100k_udiff_abs.mat");
 
         AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity", config_reg);
         AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity", config_diff);
         AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_n);
+        AlgorithmInstance diffusion_abs_algo = new AlgorithmInstance("diffusion_abs_" + vectorSimilarityMeasure + "_similarity", config_diff_abs);
 
         SimpleEvaluator simpleEval = new SimpleEvaluator();
         simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
         simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_abs_algo);
 
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);

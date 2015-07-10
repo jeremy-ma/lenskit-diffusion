@@ -38,8 +38,7 @@ import java.lang.annotation.Target;
 
 
 /**
- * Number of neighbors to consider when building a prediction.  Used by both
- * user-user and item-item CF. If 0, then all neighbors are used.
+ * String indicating filename for diffusion matrix
  */
 @Documented
 @Parameter(String.class)
