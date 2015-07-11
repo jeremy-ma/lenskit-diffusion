@@ -168,7 +168,7 @@ public class HelloLenskit implements Runnable {
         simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
         simpleEval.addAlgorithm(diffusion_norm_algo);
-        simpleEval.addAlgorithm(diffusion_abs_algo);
+        // simpleEval.addAlgorithm(diffusion_abs_algo);
 
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);

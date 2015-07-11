@@ -126,13 +126,29 @@ if __name__ == '__main__':
 
 	# create_similarity_matrices(helper.defaultNumUsers,helper.defaultNumItems,'ml-100k/u.data')
 
-	# helper.main_diffusion('cosine', 1.0, threshold_fraction=0.1)
+	# helper.main_diffusion('cosine', 1.0, threshold_fraction=0.010)
 
+	
 	run_test_set(threshold_fraction=0.05)
 	analyse_csv()
 
+	subprocess.call("mkdir results_threshold_0.05", shell=True)
+	subprocess.call("mv *.csv results_threshold_0.05", shell=True)
 
 
+	run_test_set(threshold_fraction=0.1)
+	analyse_csv()
+
+	subprocess.call("mkdir results2_threshold_0.1", shell=True)
+	subprocess.call("mv *.csv results_threshold_0.1", shell=True)
+
+	run_test_set(threshold_fraction=0.15)
+	analyse_csv()
+
+	subprocess.call("mkdir results_threshold_0.15", shell=True)
+	subprocess.call("mv *.csv results_threshold_0.15", shell=True)
+
+	
 
 
 

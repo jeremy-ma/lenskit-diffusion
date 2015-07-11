@@ -86,12 +86,17 @@ def transformation(similarity):
 def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
     # performs the calculations to create the diffusion matrices
 
+    #thresholding code for absolute laplacian
+    """
     abs_threshold = find_threshold(np.abs(simmat), threshold_fraction)
     copy = np.copy(simmat)
     copy[np.logical_and(copy > -abs_threshold, copy < abs_threshold)] = 0.0
+    # print abs_threshold
     print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
+    """
+    copy = simmat
 
-    # calculate absolute laplacian with thresholding
+    # calculate absolute laplacian
     L_abs = np.zeros(copy.shape)
     for i in xrange(len(copy)):
         L_abs[i][i] = np.sum(np.abs(copy[i,:]))
@@ -100,9 +105,14 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
     # apply thresholding which reduces number of edges to the desired fraction for
     threshold = find_threshold(simmat, threshold_fraction)
     simmat[simmat < threshold] = 0.0
+    # print threshold
     print "{0} percent nonzero".format(np.count_nonzero(simmat)/float(len(simmat)**2) * 100.0 )
 
-    # apply transformation function
+    ##################################################
+    # apply transformation function x^2
+    simmat = simmat ** 2
+    ##################################################
+
     L = csgraph.laplacian(simmat, normed=False)
     L_n = csgraph.laplacian(simmat, normed=True)
 
@@ -116,6 +126,31 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
     diff_abs = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L_abs)
 
     return (diff, diff_n, diff_abs)
+
+def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
+    # binary search the correct threshold
+
+    num_iters = 15;
+
+    copy = similarity.copy()
+
+    lo = 0.0
+    hi = 1.0
+    np.count_nonzero(similarity)
+
+    for i in xrange(num_iters):
+        mid = (lo + hi) / 2.0
+        copy[copy < mid] = 0.0
+        percent = np.count_nonzero(copy)/float(numItems**2)
+        if percent > threshold_fraction:
+            # raise the threshold
+            lo = mid
+        else:
+            hi = mid
+        copy = similarity.copy()
+        #print (lo,hi)
+
+    return mid
 
 def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', numUsers=defaultNumUsers, numItems=defaultNumItems):
     # writes similarity matrices to file
@@ -135,31 +170,6 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', numUsers=defa
     scipy.io.savemat(sim_func + '_similarity_ml100k.mat', mdict={'similarity': similarity})
 
     print "done"
-
-def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
-    # binary search the correct threshold
-
-    num_iters = 15;
-
-    copy = similarity.copy()
-
-    lo = 0.0
-    hi = 1.0
-    np.count_nonzero(similarity)
-
-    for i in xrange(num_iters):
-        mid = (lo + hi) / 2.0
-        copy[copy <= mid] = 0.0
-        percent = np.count_nonzero(copy)/float(numItems**2)
-        if percent > threshold_fraction:
-            # raise the threshold
-            lo = mid
-        else:
-            hi = mid
-        copy = similarity.copy()
-
-    return mid
-
 
 def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, numItems=defaultNumItems, numUsers=defaultNumUsers):
     # this function creates and writes the diffusion matrix files
