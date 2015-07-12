@@ -20,13 +20,14 @@ alpha_nl_array = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 100.0,
 metrics = ['RMSE.ByUser','RMSE.ByRating','MAE.ByUser','MAE.ByRating']
 
 # run test set
-def run_test_set(threshold_fraction=0.3):
+def run_test_set(threshold_fraction=0.3, transform=helper.transformation_linear):
 	for vectorfunc in vector_similarity_funcs:
 		for matrixfunc in similarity_matrix_funcs:
 			for alpha_nL in alpha_nl_array:
-				helper.main_diffusion(matrixfunc, alpha_nL, threshold_fraction)
+				helper.main_diffusion(matrixfunc, alpha_nL, threshold_fraction, transform)
 				dataFileName = "ml-100k/u.data"
-				resultFileName = "results_" + vectorfunc + "vectorsim" + "_" + matrixfunc + "similaritymatrix_" + "alpha_nL_" + str(alpha_nL) + ".csv"
+				resultFileName = "results_" + vectorfunc + "vectorsim" + "_" \
+							+ matrixfunc + "similaritymatrix_" + "alpha_nL_" + str(alpha_nL) + ".csv"
 
 				args = " {0} {1} {2}".format(dataFileName, resultFileName, vectorfunc)
 
@@ -128,27 +129,21 @@ if __name__ == '__main__':
 
 	# helper.main_diffusion('cosine', 1.0, threshold_fraction=0.010)
 
-	
-	run_test_set(threshold_fraction=0.05)
+
+	run_test_set(threshold_fraction=0.1, transform=helper.transformation_squared)
 	analyse_csv()
 
-	subprocess.call("mkdir results_threshold_0.05", shell=True)
-	subprocess.call("mv *.csv results_threshold_0.05", shell=True)
+	subprocess.call("mkdir results_threshold_0.1_squared", shell=True)
+	subprocess.call("mv *.csv results_threshold_0.1_squared", shell=True)
 
 
-	run_test_set(threshold_fraction=0.1)
+	run_test_set(threshold_fraction=0.1, transform=helper.transformation_cubed)
 	analyse_csv()
 
-	subprocess.call("mkdir results2_threshold_0.1", shell=True)
-	subprocess.call("mv *.csv results_threshold_0.1", shell=True)
+	subprocess.call("mkdir results_threshold_0.1_cubed", shell=True)
+	subprocess.call("mv *.csv results_threshold_0.1_cubed", shell=True)
 
-	run_test_set(threshold_fraction=0.15)
-	analyse_csv()
 
-	subprocess.call("mkdir results_threshold_0.15", shell=True)
-	subprocess.call("mv *.csv results_threshold_0.15", shell=True)
-
-	
 
 
 

@@ -80,10 +80,17 @@ def create_similarity_adjusted_cosine(utility,numUsers,numItems):
 
     return similarity
 
-def transformation(similarity):
+def transformation_linear(similarity):
+    # no transform
     return similarity
 
-def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
+def transformation_squared(similarity):
+    return similarity ** 2
+
+def transformation_cubed(similarity):
+    return similarity ** 3
+
+def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear):
     # performs the calculations to create the diffusion matrices
 
     #thresholding code for absolute laplacian
@@ -109,8 +116,8 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3):
     print "{0} percent nonzero".format(np.count_nonzero(simmat)/float(len(simmat)**2) * 100.0 )
 
     ##################################################
-    # apply transformation function x^2
-    simmat = simmat ** 2
+    # apply transformation function
+    simmat = transform(simmat)
     ##################################################
 
     L = csgraph.laplacian(simmat, normed=False)
@@ -152,7 +159,8 @@ def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
 
     return mid
 
-def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', numUsers=defaultNumUsers, numItems=defaultNumItems):
+def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', 
+                    numUsers=defaultNumUsers, numItems=defaultNumItems):
     # writes similarity matrices to file
 
     print "generating utility matrix......"
@@ -171,7 +179,8 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', numUsers=defa
 
     print "done"
 
-def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, numItems=defaultNumItems, numUsers=defaultNumUsers):
+def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, 
+                    numItems=defaultNumItems, numUsers=defaultNumUsers, transform=transformation_linear):
     # this function creates and writes the diffusion matrix files
 
     # use a similarity matrix which has nonzero values
