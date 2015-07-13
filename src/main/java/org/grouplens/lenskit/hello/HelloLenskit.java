@@ -164,11 +164,18 @@ public class HelloLenskit implements Runnable {
         AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_n);
         AlgorithmInstance diffusion_abs_algo = new AlgorithmInstance("diffusion_abs_" + vectorSimilarityMeasure + "_similarity", config_diff_abs);
 
+        LenskitConfiguration config_test = new LenskitConfiguration();
+        set_config(config_test);
+        config_test.bind(VectorSimilarity.class).to(TestVectorSimilarity.class);
+        config_test.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
+        AlgorithmInstance test_algo = new AlgorithmInstance("diffusion_norm_algo_trainonpartitions", config_test);
+
         SimpleEvaluator simpleEval = new SimpleEvaluator();
-        simpleEval.addAlgorithm(diffusion_algo);
+        //simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
-        simpleEval.addAlgorithm(diffusion_norm_algo);
-        // simpleEval.addAlgorithm(diffusion_abs_algo);
+        //simpleEval.addAlgorithm(diffusion_norm_algo);
+        //simpleEval.addAlgorithm(diffusion_abs_algo);
+        simpleEval.addAlgorithm(test_algo);
 
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);

@@ -1,2 +1,0 @@
-Algorithm,DataSet,Partition,BuildTime,TestTime,RMSE.ByUser,RMSE.ByRating
-diffusion_norm,ml-100k/u.data,4,602,1035661,0.7264403955409152,0.7680298094352298
