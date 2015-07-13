@@ -7,20 +7,20 @@ import sys, editdistance
 
 
 defaultNumUsers,defaultNumItems = 943, 1682
-
+matrix_path = 'precomputed_matrices/'
 
 #create a utility matrix from a ratings file
 #rows correspond to users, items (movies) corresponds to columns
-def create_utility_matrix(filename, numUsers, numItems):
+def create_utility_matrix(filename, numUsers, numItems, file_delimiter='\t'):
 
     ratings_f = open(filename, 'r')
     utility = np.zeros((numUsers,numItems))
     for line in ratings_f:
         line = line.rstrip()
-        fields = line.split('\t')
+        fields = line.split(file_delimiter)
         uid = int(fields[0]) - 1
         movid = int(fields[1]) - 1
-        rating = int(fields[2])
+        rating = float(fields[2])
         utility[uid][movid] = rating
 
     return utility
@@ -160,11 +160,12 @@ def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
     return mid
 
 def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', 
-                    numUsers=defaultNumUsers, numItems=defaultNumItems):
+                    numUsers=defaultNumUsers, numItems=defaultNumItems, 
+                    outsuffix='_similarity_ml100k.mat', file_delimiter='\t'):
     # writes similarity matrices to file
 
     print "generating utility matrix......"
-    utility = create_utility_matrix(filename, numUsers,numItems)
+    utility = create_utility_matrix(filename, numUsers, numItems, file_delimiter=file_delimiter)
     print "done"
 
     print "creating similarity matrix....."
@@ -175,25 +176,26 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data',
     elif sim_func == 'pearson':
         similarity = create_similarity_pearson_correlation(utility, numUsers,numItems)
 
-    scipy.io.savemat(sim_func + '_similarity_ml100k.mat', mdict={'similarity': similarity})
+    scipy.io.savemat(sim_func + outsuffix, mdict={'similarity': similarity})
 
     print "done"
 
 def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, 
-                    numItems=defaultNumItems, numUsers=defaultNumUsers, transform=transformation_linear):
+                    numItems=defaultNumItems, numUsers=defaultNumUsers, transform=transformation_linear,
+                    simmat_suffix='_similarity_ml100k.mat', output_prefix=''):
     # this function creates and writes the diffusion matrix files
 
     # use a similarity matrix which has nonzero values
-    similarity = scipy.io.loadmat(sim_func + '_similarity_ml100k.mat')['similarity']
+    similarity = scipy.io.loadmat(matrix_path + sim_func + simmat_suffix)['similarity']
 
     print "creating diffusion matrix alpha_nL: " + str(alpha_nL)
     diff, diff_n, diff_abs = create_diffusion(similarity, alpha_nL,threshold_fraction)
     print "saving"
 
     # save both the normalized and regular diffusion matrices
-    scipy.io.savemat('ml100k_udiff.mat',mdict={'diffusion':diff})
-    scipy.io.savemat('ml100k_udiff_n.mat',mdict={'diffusion':diff_n})
-    scipy.io.savemat('ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff.mat',mdict={'diffusion':diff})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_n.mat',mdict={'diffusion':diff_n})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
 
 
 # removes the year and foreign language translation from the movie name
