@@ -28,6 +28,7 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.grouplens.lenskit.core.Shareable;
+import org.grouplens.lenskit.hello.DiffusionModel;
 import org.grouplens.lenskit.vectors.SparseVector;
 import org.grouplens.lenskit.vectors.VectorEntry;
 import org.grouplens.lenskit.vectors.Vectors;
@@ -52,8 +53,8 @@ import static java.lang.Math.sqrt;
  *
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
  */
-@Shareable
-public class DiffusedPearsonCorrelation implements VectorSimilarity, Serializable {
+
+public class DiffusedPearsonCorrelation implements VectorSimilarity {
     private static final long serialVersionUID = 1L;
     private RealMatrix diffMatrix = null;
     private HashMap<SparseVector, ArrayRealVector> cache = null;
@@ -61,33 +62,21 @@ public class DiffusedPearsonCorrelation implements VectorSimilarity, Serializabl
     private final double shrinkage;
 
     public DiffusedPearsonCorrelation() {
-        this(0);
+        this(0, null);
     }
 
     @Inject
-    public DiffusedPearsonCorrelation(@SimilarityDamping double s) {
+    public DiffusedPearsonCorrelation(@SimilarityDamping double s, DiffusionModel model) {
         shrinkage = s;
-        try{
-            MatFileReader reader = new MatFileReader("ml100k_udiff.mat");
-            MLDouble red = (MLDouble) reader.getMLArray("ml100k_udiff");
-            double [][] diffusion = red.getArray();
-            this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
-            System.out.println("Matrix is made");
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-            System.out.println("Failed to read in the diffusion matrix");
-        }
+        diffMatrix = model.getDiffusionMatrix();
         //initialise the cache
         cache = new HashMap<SparseVector, ArrayRealVector>();
 
-
         pearson = new PearsonsCorrelation();
-
     }
 
     @Override
     public double similarity(SparseVector vec1, SparseVector vec2) {
-
 
         // First check for empty vectors - then we can assume at least one element
         if (vec1.isEmpty() || vec2.isEmpty()) {
@@ -109,7 +98,7 @@ public class DiffusedPearsonCorrelation implements VectorSimilarity, Serializabl
 
 
         double corr = pearson.correlation(v_diff.getDataRef(),w_diff.getDataRef());
-        System.out.println(corr);
+        // System.out.println(corr);
         return corr;
 
     }
@@ -126,7 +115,6 @@ public class DiffusedPearsonCorrelation implements VectorSimilarity, Serializabl
         return w_diff;
 
     }
-
 
     @Override
     public boolean isSparse() {

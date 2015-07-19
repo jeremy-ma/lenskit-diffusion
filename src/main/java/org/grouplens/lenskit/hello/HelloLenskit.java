@@ -21,6 +21,7 @@
  */
 package org.grouplens.lenskit.hello;
 
+import groovy.util.Eval;
 import org.codehaus.groovy.tools.shell.Command;
 import org.grouplens.lenskit.ItemRecommender;
 import org.grouplens.lenskit.ItemScorer;
@@ -34,6 +35,8 @@ import org.grouplens.lenskit.core.LenskitConfiguration;
 import org.grouplens.lenskit.core.LenskitRecommender;
 import org.grouplens.lenskit.data.dao.EventDAO;
 import org.grouplens.lenskit.data.dao.SimpleFileRatingDAO;
+import org.grouplens.lenskit.eval.EvalConfig;
+import org.grouplens.lenskit.eval.EvalProject;
 import org.grouplens.lenskit.eval.algorithm.AlgorithmInstance;
 import org.grouplens.lenskit.eval.data.CSVDataSource;
 import org.grouplens.lenskit.eval.data.CSVDataSourceBuilder;
@@ -62,6 +65,7 @@ import javax.activation.DataSource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Demonstration app for LensKit. This application builds an item-item CF model
@@ -84,8 +88,9 @@ public class HelloLenskit implements Runnable {
     private String dataFileName = "ml-100k/u.data";
     private String resultsFileName = "results.csv";
     private String vectorSimilarityMeasure = "cosine";
+    private int numNeighbours = 40;
 
-    private static void set_config(LenskitConfiguration config){
+    private void set_config(LenskitConfiguration config){
         config.bind(ItemScorer.class)
                 .to(UserUserItemScorer.class);
         config.bind(BaselineScorer.class, ItemScorer.class)
@@ -94,12 +99,12 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
         config.bind(UserVectorNormalizer.class)
                 .to(BaselineSubtractingUserVectorNormalizer.class);
-        config.set(NeighborhoodSize.class).to(30);
+        config.set(NeighborhoodSize.class).to(numNeighbours);
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
 
     }
 
-    private static void set_config_mean_predictor(LenskitConfiguration config){
+    private void set_config_mean_predictor(LenskitConfiguration config){
         config.bind(ItemScorer.class)
                 .to(UserMeanItemScorer.class);
         config.bind(BaselineScorer.class, ItemScorer.class)
@@ -108,20 +113,24 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
         config.bind(UserVectorNormalizer.class)
                 .to(BaselineSubtractingUserVectorNormalizer.class);
-        config.set(NeighborhoodSize.class).to(40);
+        config.set(NeighborhoodSize.class).to(numNeighbours);
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
     }
 
 
     public HelloLenskit(String[] args) {
-        if (args.length == 3) {
+        if (args.length >= 3) {
             System.out.println("Running test with custom settings");
             dataFileName = args[0];
             resultsFileName = args[1];
             vectorSimilarityMeasure = args[2];
-
+            //set num neighbours
+            if (args.length == 4){
+                numNeighbours = Integer.parseInt(args[3]);
+            }
             System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
-                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
+                    " vector_similarity: " + vectorSimilarityMeasure + "num_neighbours: " + Integer.toString(numNeighbours) + "\n");
+
         } else {
             System.out.println("Running test with default settings");
             System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
@@ -148,6 +157,11 @@ public class HelloLenskit implements Runnable {
             config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
             config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
             config_diff_abs.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        } else if (vectorSimilarityMeasure.equalsIgnoreCase("pearson")){
+            config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+            config_diff_abs.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
         } else {
             config_reg.bind(VectorSimilarity.class).to(DistanceVectorSimilarity.class);
             config_diff.bind(VectorSimilarity.class).to(DiffusedDistanceVectorSimilarity.class);
@@ -164,18 +178,15 @@ public class HelloLenskit implements Runnable {
         AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_n);
         AlgorithmInstance diffusion_abs_algo = new AlgorithmInstance("diffusion_abs_" + vectorSimilarityMeasure + "_similarity", config_diff_abs);
 
-        LenskitConfiguration config_test = new LenskitConfiguration();
-        set_config(config_test);
-        config_test.bind(VectorSimilarity.class).to(TestVectorSimilarity.class);
-        config_test.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
-        AlgorithmInstance test_algo = new AlgorithmInstance("diffusion_norm_algo_trainonpartitions", config_test);
+        //set to run with 4 threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, "4");
 
-        SimpleEvaluator simpleEval = new SimpleEvaluator();
-        //simpleEval.addAlgorithm(diffusion_algo);
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+       // simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
-        //simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
         //simpleEval.addAlgorithm(diffusion_abs_algo);
-        simpleEval.addAlgorithm(test_algo);
 
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);

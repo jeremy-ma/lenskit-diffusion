@@ -21,19 +21,9 @@ public class DiffusedCosineVectorSimilarity implements VectorSimilarity {
     private HashMap<SparseVector, ArrayRealVector> cache = null;
 
     @Inject
-    public DiffusedCosineVectorSimilarity(@DiffusionMatrixType String diffusionFileName){
+    public DiffusedCosineVectorSimilarity(DiffusionModel model){
         //read in the matrix
-        try{
-            MatFileReader reader = new MatFileReader(diffusionFileName);
-            MLDouble red = (MLDouble) reader.getMLArray("diffusion");
-            double [][] diffusion = red.getArray();
-            this.diffMatrix = MatrixUtils.createRealMatrix(diffusion);
-            System.out.println("Matrix is made");
-
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-            System.out.println("Failed to read in the diffusion matrix");
-        }
+        diffMatrix = model.getDiffusionMatrix();
         cache = new HashMap<SparseVector, ArrayRealVector>();
     }
 

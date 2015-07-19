@@ -4,7 +4,7 @@ import scipy.io
 from scipy.sparse import csgraph
 from scipy.spatial.distance import cosine
 import sys, editdistance
-
+from scipy.special import logit
 
 defaultNumUsers,defaultNumItems = 943, 1682
 matrix_path = 'precomputed_matrices/'
@@ -63,16 +63,14 @@ def create_similarity_adjusted_cosine(utility,numUsers,numItems):
     similarity = np.zeros((numItems,numItems))
 
     # mean centre the ratings for each user (leaving 0's unaffected)
-
     for u in xrange(numUsers):
         zero_indices = np.where(utility[u,:] == 0)[0]
-        utility[u,:] = utility[u,:] - utility[u,:].mean()
+        utility[u,:] = utility[u,:] - utility[u,:].sum() / float(np.count_nonzero(utility[u,:]))
         utility[u,:][zero_indices] = 0.0
 
     for i in xrange(numItems):
         for j in xrange(i,numItems):
-            #calculate the pearson correlation coefficient between two movies
-            #print pearsonr(utility[:,i],utility[:,j])
+            #calculate the cosine correlation between two movies
             if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
                 continue
             sim = 1 - cosine(utility[:,i],utility[:,j])
@@ -90,6 +88,10 @@ def transformation_squared(similarity):
 def transformation_cubed(similarity):
     return similarity ** 3
 
+def transformation_exp(similarity):
+    return np.exp(similarity) - 1.0
+
+
 def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear):
     # performs the calculations to create the diffusion matrices
 
@@ -101,8 +103,7 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=tra
     # print abs_threshold
     print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
     """
-    copy = simmat
-
+    copy = np.copy(simmat)
     # calculate absolute laplacian
     L_abs = np.zeros(copy.shape)
     for i in xrange(len(copy)):
@@ -126,11 +127,12 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=tra
     # calculate diffusion rates
     ratio_diagL_diagNL = L.diagonal().sum() / L_n.diagonal().sum()
     alpha_L = alpha_nL / ratio_diagL_diagNL
-    #alpha_L 5.5377e-07
+    ratio_diagabsL_diagNL = L_abs.diagonal().sum() / L_n.diagonal().sum()
+    alpha_absL = alpha_nL / ratio_diagabsL_diagNL
 
     diff = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L)
     diff_n = np.linalg.inv(np.eye(len(simmat)) + alpha_nL * L_n)
-    diff_abs = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L_abs)
+    diff_abs = np.linalg.inv(np.eye(len(simmat)) + alpha_absL * L_abs)
 
     return (diff, diff_n, diff_abs)
 
@@ -189,7 +191,7 @@ def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3,
     similarity = scipy.io.loadmat(matrix_path + sim_func + simmat_suffix)['similarity']
 
     print "creating diffusion matrix alpha_nL: " + str(alpha_nL)
-    diff, diff_n, diff_abs = create_diffusion(similarity, alpha_nL,threshold_fraction)
+    diff, diff_n, diff_abs = create_diffusion(similarity, alpha_nL,threshold_fraction, transform)
     print "saving"
 
     # save both the normalized and regular diffusion matrices
