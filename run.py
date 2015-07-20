@@ -13,8 +13,8 @@ run_command =  "/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/
 # run_command = "java -jar ./build/classes/artifacts/lenskit_algorithm_example_master_jar2/lenskit-algorithm-example-master.jar"
 
 filename = 'ml-100k/u.data'
-similarity_matrix_funcs = ['pearson']
-vector_similarity_funcs = ['pearson']
+similarity_matrix_funcs = ['adjusted_cosine', 'pearson']
+vector_similarity_funcs = ['cosine', 'pearson']
 alpha_nl_array = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 partitions = 5
 metrics = ['RMSE.ByUser','RMSE.ByRating','MAE.ByUser','MAE.ByRating']
@@ -156,12 +156,12 @@ if __name__ == '__main__':
 	threshold = 0.08
 	k = 50
 
-	for transform, tname in [(helper.transformation_linear,'squared'), \
-							 (helper.transformation_cubed,'cubed'), (helper.transformation_exp, 'exp')]:
-		run_test_set_partitions(threshold_fraction=0.08, transform=transform, knn=k)
-		analyse_csv()
-		subprocess.call("mkdir results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname + "_pearson", shell=True)
-		subprocess.call("mv *.csv results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname + "_pearson", shell=True)
+	for transform, tname in [(helper.transformation_linear,'linear')]:
+		for threshold in [0.07, 0.075, 0.08, 0.085]:
+			run_test_set_partitions(threshold_fraction=threshold, transform=transform, knn=k)
+			analyse_csv()
+			subprocess.call("mkdir results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname, shell=True)
+			subprocess.call("mv *.csv results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname, shell=True)
 
 	# run_test_set(threshold_fraction=0.15, transform=helper.transformation_cubed)
 	# analyse_csv()

@@ -5,6 +5,7 @@ from scipy.sparse import csgraph
 from scipy.spatial.distance import cosine
 import sys, editdistance
 from scipy.special import logit
+import pdb
 
 defaultNumUsers,defaultNumItems = 943, 1682
 matrix_path = 'precomputed_matrices/'
@@ -92,7 +93,7 @@ def transformation_exp(similarity):
     return np.exp(similarity) - 1.0
 
 
-def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear):
+def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear, threshold_normalized=True):
     # performs the calculations to create the diffusion matrices
 
     #thresholding code for absolute laplacian
@@ -104,11 +105,26 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=tra
     print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
     """
     copy = np.copy(simmat)
+    if threshold_normalized is True:
+        print "Thresholding for absolute laplacian"
+        threshold = find_threshold(np.abs(copy), threshold_fraction)
+        copy[np.logical_and(copy > -(threshold)/2, copy<threshold)] = 0.0
+        print "{0} percent nonzero".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
+        print "{0} percent negative".format((copy<0).sum()/float(len(simmat)**2))
+
     # calculate absolute laplacian
     L_abs = np.zeros(copy.shape)
     for i in xrange(len(copy)):
         L_abs[i][i] = np.sum(np.abs(copy[i,:]))
     L_abs = L_abs - copy
+
+    # make absolute normalized laplacian
+
+    D = np.eye(copy.shape[0]) * np.diag(L_abs)
+    D_inv = 1.0 / D
+    D_inv[np.isinf(D_inv)] = 0.0
+    L_abs_n = np.dot(D_inv, L_abs)
+    # pdb.set_trace()
 
     # apply thresholding which reduces number of edges to the desired fraction for
     threshold = find_threshold(simmat, threshold_fraction)
@@ -133,8 +149,9 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=tra
     diff = np.linalg.inv(np.eye(len(simmat)) + alpha_L * L)
     diff_n = np.linalg.inv(np.eye(len(simmat)) + alpha_nL * L_n)
     diff_abs = np.linalg.inv(np.eye(len(simmat)) + alpha_absL * L_abs)
+    diff_abs_n = np.linalg.inv(np.eye(len(simmat)) + alpha_nL * L_abs_n)
 
-    return (diff, diff_n, diff_abs)
+    return (diff, diff_n, diff_abs, diff_abs_n)
 
 def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
     # binary search the correct threshold
@@ -191,13 +208,14 @@ def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3,
     similarity = scipy.io.loadmat(matrix_path + sim_func + simmat_suffix)['similarity']
 
     print "creating diffusion matrix alpha_nL: " + str(alpha_nL)
-    diff, diff_n, diff_abs = create_diffusion(similarity, alpha_nL,threshold_fraction, transform)
+    diff, diff_n, diff_abs, diff_abs_n = create_diffusion(similarity, alpha_nL,threshold_fraction, transform)
     print "saving"
 
     # save both the normalized and regular diffusion matrices
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff.mat',mdict={'diffusion':diff})
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_n.mat',mdict={'diffusion':diff_n})
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs_n.mat', mdict={'diffusion':diff_abs_n})
 
 
 # removes the year and foreign language translation from the movie name
