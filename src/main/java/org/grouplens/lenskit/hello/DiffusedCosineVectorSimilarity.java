@@ -39,7 +39,6 @@ public class DiffusedCosineVectorSimilarity implements VectorSimilarity {
         if (( v_diff = this.cache.get(vec1) ) == null){
 
             v_diff = this.getDiffused(vec1);
-
             this.cache.put(vec1,v_diff);
         }
 
@@ -54,11 +53,7 @@ public class DiffusedCosineVectorSimilarity implements VectorSimilarity {
         if (w_diff.getNorm() > 0) {
             w_diff = (ArrayRealVector) w_diff.unitVector();
         }
-        //System.out.print(v_diff.getNorm());
-        //System.out.print("            ");
-        //System.out.println(w_diff.getNorm());
 
-        //System.out.println((1.37-v_diff.subtract(w_diff).getNorm())*5);
         return v_diff.cosine(w_diff);
 
     }

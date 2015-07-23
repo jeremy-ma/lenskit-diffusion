@@ -22,6 +22,8 @@
 package org.grouplens.lenskit.hello;
 
 import groovy.util.Eval;
+import org.apache.commons.math3.analysis.function.Cos;
+import org.apache.commons.math3.genetics.StoppingCondition;
 import org.codehaus.groovy.tools.shell.Command;
 import org.grouplens.lenskit.ItemRecommender;
 import org.grouplens.lenskit.ItemScorer;
@@ -49,10 +51,16 @@ import org.grouplens.lenskit.eval.script.EvalScript;
 import org.grouplens.lenskit.eval.traintest.MetricFactory;
 import org.grouplens.lenskit.eval.traintest.SimpleEvaluator;
 import org.grouplens.lenskit.eval.traintest.TrainTestEvalTask;
+import org.grouplens.lenskit.iterative.IterationCount;
+import org.grouplens.lenskit.iterative.IterationCountStoppingCondition;
+import org.grouplens.lenskit.iterative.RegularizationTerm;
 import org.grouplens.lenskit.knn.NeighborhoodSize;
+import org.grouplens.lenskit.knn.item.*;
+import org.grouplens.lenskit.knn.item.model.ItemItemModelBuilder;
 import org.grouplens.lenskit.knn.user.NeighborFinder;
 import org.grouplens.lenskit.knn.user.SnapshotNeighborFinder;
 import org.grouplens.lenskit.knn.user.UserUserItemScorer;
+import org.grouplens.lenskit.mf.funksvd.FunkSVDItemScorer;
 import org.grouplens.lenskit.scored.ScoredId;
 import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.MeanCenteringVectorNormalizer;
@@ -60,6 +68,8 @@ import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.VectorNormalizer;
 import org.grouplens.lenskit.vectors.similarity.*;
 import org.grouplens.lenskit.vectors.similarity.DiffusedPearsonCorrelation;
+import org.grouplens.lenskit.vectors.similarity.TestVectorSimilarity;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import javax.activation.DataSource;
 import java.io.File;
@@ -88,7 +98,8 @@ public class HelloLenskit implements Runnable {
     private String dataFileName = "ml-100k/u.data";
     private String resultsFileName = "results.csv";
     private String vectorSimilarityMeasure = "cosine";
-    private int numNeighbours = 40;
+    private String method = "itemitemCF";
+    private int numNeighbours = 50;
 
     private void set_config(LenskitConfiguration config){
         config.bind(ItemScorer.class)
@@ -101,6 +112,29 @@ public class HelloLenskit implements Runnable {
                 .to(BaselineSubtractingUserVectorNormalizer.class);
         config.set(NeighborhoodSize.class).to(numNeighbours);
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
+
+    }
+
+    private void set_config_itemitem(LenskitConfiguration config){
+        config.bind(ItemScorer.class).to(ItemItemScorer.class);
+        config.bind(BaselineScorer.class, ItemScorer.class)
+                .to(UserMeanItemScorer.class);
+        config.bind(UserMeanBaseline.class, ItemScorer.class)
+                .to(ItemMeanRatingItemScorer.class);
+        config.bind(UserVectorNormalizer.class)
+                .to(BaselineSubtractingUserVectorNormalizer.class);
+    }
+
+    private void set_config_FunkSVD(LenskitConfiguration config){
+        config.bind(ItemScorer.class).to(FunkSVDItemScorer.class);
+        config.set(IterationCount.class).to(100);
+        config.set(RegularizationTerm.class).to(0.002);
+        config.bind(BaselineScorer.class, ItemScorer.class)
+                        .to(UserMeanItemScorer.class);
+        config.bind(UserMeanBaseline.class, ItemScorer.class)
+                .to(ItemMeanRatingItemScorer.class);
+        config.bind(UserVectorNormalizer.class)
+                .to(BaselineSubtractingUserVectorNormalizer.class);
 
     }
 
@@ -117,31 +151,7 @@ public class HelloLenskit implements Runnable {
         config.bind(NeighborFinder.class).to(SnapshotNeighborFinder.class);
     }
 
-
-    public HelloLenskit(String[] args) {
-        if (args.length >= 3) {
-            System.out.println("Running test with custom settings");
-            dataFileName = args[0];
-            resultsFileName = args[1];
-            vectorSimilarityMeasure = args[2];
-            //set num neighbours
-            if (args.length == 4){
-                numNeighbours = Integer.parseInt(args[3]);
-            }
-            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
-                    " vector_similarity: " + vectorSimilarityMeasure + "num_neighbours: " + Integer.toString(numNeighbours) + "\n");
-
-        } else {
-            System.out.println("Running test with default settings");
-            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
-                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
-        }
-
-
-    }
-
-    public void run() {
-
+    private SimpleEvaluator UserUserEval(int numThreads){
         LenskitConfiguration config_reg = new LenskitConfiguration();
         set_config(config_reg);
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -150,6 +160,8 @@ public class HelloLenskit implements Runnable {
         set_config(config_diff_n);
         LenskitConfiguration config_diff_abs = new LenskitConfiguration();
         set_config(config_diff_abs);
+        LenskitConfiguration config_diff_abs_n = new LenskitConfiguration();
+        set_config(config_diff_abs_n);
 
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
@@ -158,7 +170,7 @@ public class HelloLenskit implements Runnable {
             config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
             config_diff_abs.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
         } else if (vectorSimilarityMeasure.equalsIgnoreCase("pearson")){
-            config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+            config_reg.bind(VectorSimilarity.class).to(PearsonCorrelation.class);
             config_diff.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
             config_diff_n.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
             config_diff_abs.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
@@ -172,21 +184,102 @@ public class HelloLenskit implements Runnable {
         config_diff.set(DiffusionMatrixType.class).to("ml100k_udiff.mat");
         config_diff_n.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
         config_diff_abs.set(DiffusionMatrixType.class).to("ml100k_udiff_abs.mat");
+        config_diff_abs_n.set(DiffusionMatrixType.class).to("ml100k_udiff_abs_n.mat");
 
         AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity", config_reg);
         AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity", config_diff);
         AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_n);
         AlgorithmInstance diffusion_abs_algo = new AlgorithmInstance("diffusion_abs_" + vectorSimilarityMeasure + "_similarity", config_diff_abs);
+        AlgorithmInstance diffusion_abs_norm_algo = new AlgorithmInstance("diffusion_abs_norm_" + vectorSimilarityMeasure + "_similarity", config_diff_abs_n);
 
-        //set to run with 4 threads
+        //set to run with n threads
         Properties EvalProps = new Properties();
-        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, "4");
-
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
         SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
-       // simpleEval.addAlgorithm(diffusion_algo);
+        simpleEval.addAlgorithm(diffusion_algo);
         simpleEval.addAlgorithm(regular_algo);
         simpleEval.addAlgorithm(diffusion_norm_algo);
-        //simpleEval.addAlgorithm(diffusion_abs_algo);
+        simpleEval.addAlgorithm(diffusion_abs_algo);
+        simpleEval.addAlgorithm(diffusion_abs_norm_algo);
+
+        return simpleEval;
+    }
+
+    private SimpleEvaluator ItemItemEval(int numThreads){
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_itemitem(config_diff_n);
+        set_config_itemitem(config_reg);
+        set_config_itemitem(config_diff);
+
+        config_diff_n.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
+        config_diff.set(DiffusionMatrixType.class).to("ml100k_udiff.mat");
+
+        if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
+            config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        } else {
+            config_reg.bind(VectorSimilarity.class).to(PearsonCorrelation.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+        }
+
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_reg);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_diff);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF", config_diff_n);
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(diffusion_algo);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+
+        return simpleEval;
+    }
+
+    public HelloLenskit(String[] args) {
+        if (args.length >= 5) {
+            System.out.println("Running test with custom settings");
+            dataFileName = args[0];
+            resultsFileName = args[1];
+            vectorSimilarityMeasure = args[2];
+            //set num neighbours
+            numNeighbours = Integer.parseInt(args[3]);
+            method = args[4];
+            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
+                    " vector_similarity: " + vectorSimilarityMeasure + "num_neighbours: " + Integer.toString(numNeighbours) + "\n");
+
+        } else {
+            System.out.println("Running test with default settings");
+            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
+                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
+        }
+
+
+    }
+
+
+    public void run() {
+
+        SimpleEvaluator simpleEval;
+
+        if (false){
+            simpleEval = UserUserEval(4);
+        } else {
+            simpleEval = ItemItemEval(4);
+        }
+
+        //add some funk SVD
+        LenskitConfiguration config_SVD = new LenskitConfiguration();
+        set_config_FunkSVD(config_SVD);
+        AlgorithmInstance SVD_algo = new AlgorithmInstance("FunkSVD", config_SVD);
+        simpleEval.addAlgorithm(SVD_algo);
 
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);

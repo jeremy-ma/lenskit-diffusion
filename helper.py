@@ -30,12 +30,11 @@ def symmetrize(a):
     return a + a.T - np.diag(a.diagonal())
 
 # create similarity matrix based on the pearson correlation measure
-def create_similarity_pearson_correlation(utility, numUsers, numItems):
-
-    similarity = np.zeros((numItems,numItems))
-
-    for i in xrange(numItems):
-        for j in xrange(i,numItems):
+def create_similarity_pearson_correlation(utility):
+    numColumns = utility.shape[1]
+    similarity = np.zeros((numColumns,numColumns))
+    for i in xrange(numColumns):
+        for j in xrange(i,numColumns):
             #calculate the pearson correlation coefficient between two movies
             #print pearsonr(utility[:,i],utility[:,j])
             if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
@@ -46,12 +45,12 @@ def create_similarity_pearson_correlation(utility, numUsers, numItems):
     return similarity
 
 
-def create_similarity_cosine(utility, numUsers, numItems):
+def create_similarity_cosine(utility):
     # create similarity matrix using cosine similarity
-    similarity = np.zeros((numItems,numItems))
-
-    for i in xrange(numItems):
-        for j in xrange(i,numItems):
+    numColumns = utility.shape[1]
+    similarity = np.zeros((numColumns,numColumns))
+    for i in xrange(numColumns):
+        for j in xrange(i,numColumns):
             if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
                 continue
             sim = 1 - cosine(utility[:,i],utility[:,j])
@@ -59,18 +58,21 @@ def create_similarity_cosine(utility, numUsers, numItems):
 
     return similarity
 
-def create_similarity_adjusted_cosine(utility,numUsers,numItems):
+def create_similarity_adjusted_cosine(utility):
     # create similarity matrix using the adjusted cosine similarity measure
-    similarity = np.zeros((numItems,numItems))
-
+    numRows, numColumns = utility.shape
+    similarity = np.zeros((numColumns,numColumns))
     # mean centre the ratings for each user (leaving 0's unaffected)
-    for u in xrange(numUsers):
+    for u in xrange(numRows):
+        if np.count_nonzero(utility[u,:]) == 0:
+            # don't mean center zero vectors
+            continue
         zero_indices = np.where(utility[u,:] == 0)[0]
         utility[u,:] = utility[u,:] - utility[u,:].sum() / float(np.count_nonzero(utility[u,:]))
         utility[u,:][zero_indices] = 0.0
 
-    for i in xrange(numItems):
-        for j in xrange(i,numItems):
+    for i in xrange(numColumns):
+        for j in xrange(i,numColumns):
             #calculate the cosine correlation between two movies
             if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
                 continue
@@ -162,40 +164,44 @@ def find_threshold(similarity, threshold_fraction, numItems = defaultNumItems):
 
     lo = 0.0
     hi = 1.0
-    np.count_nonzero(similarity)
 
     for i in xrange(num_iters):
         mid = (lo + hi) / 2.0
         copy[copy < mid] = 0.0
-        percent = np.count_nonzero(copy)/float(numItems**2)
+        percent = np.count_nonzero(copy)/float(similarity.shape[0]**2)
+        # print percent
         if percent > threshold_fraction:
             # raise the threshold
             lo = mid
         else:
             hi = mid
         copy = similarity.copy()
-        #print (lo,hi)
 
     return mid
 
 def main_similarity(sim_func ='cosine', filename='ml-100k/u.data', 
                     numUsers=defaultNumUsers, numItems=defaultNumItems, 
-                    outsuffix='_similarity_ml100k.mat', file_delimiter='\t'):
+                    outsuffix='_similarity_ml100k.mat', file_delimiter='\t', useruser=False):
     # writes similarity matrices to file
 
     print "generating utility matrix......"
     utility = create_utility_matrix(filename, numUsers, numItems, file_delimiter=file_delimiter)
     print "done"
 
+    if useruser is True:
+        utility = utility.T
+
     print "creating similarity matrix....."
     if sim_func == 'cosine':
-        similarity = create_similarity_cosine(utility, numUsers, numItems)
+        similarity = create_similarity_cosine(utility)
     elif sim_func == 'adjusted_cosine':
-        similarity = create_similarity_adjusted_cosine(utility, numUsers, numItems)
+        similarity = create_similarity_adjusted_cosine(utility)
     elif sim_func == 'pearson':
-        similarity = create_similarity_pearson_correlation(utility, numUsers,numItems)
+        similarity = create_similarity_pearson_correlation(utility)
 
-    scipy.io.savemat(sim_func + outsuffix, mdict={'similarity': similarity})
+    fname = sim_func + outsuffix
+
+    scipy.io.savemat(fname, mdict={'similarity': similarity})
 
     print "done"
 
@@ -344,7 +350,7 @@ def reduce_ml10M_ml100k():
 
 if __name__=='__main__':
 
-    reduce_ml10M_ml100k()
+    main_similarity()
 
 
 

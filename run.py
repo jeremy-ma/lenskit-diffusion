@@ -13,7 +13,7 @@ run_command =  "/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/
 # run_command = "java -jar ./build/classes/artifacts/lenskit_algorithm_example_master_jar2/lenskit-algorithm-example-master.jar"
 
 filename = 'ml-100k/u.data'
-similarity_matrix_funcs = ['adjusted_cosine', 'pearson']
+similarity_matrix_funcs = ['adjusted_cosine', 'pearson', 'cosine']
 vector_similarity_funcs = ['cosine', 'pearson']
 alpha_nl_array = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 partitions = 5
@@ -32,14 +32,19 @@ def run_test_set(threshold_fraction=0.3, transform=helper.transformation_linear)
 				subprocess.call(run_command + args, shell=True)
 
 # run test set but make diffusion matrices for each partition
-def run_test_set_partitions(threshold_fraction=0.3, transform=helper.transformation_linear, knn=40):
+def run_test_set_partitions(threshold_fraction=0.3, transform=helper.transformation_linear, knn=40, useruser=False):
 	for vectorfunc in vector_similarity_funcs:
 		for matrixfunc in similarity_matrix_funcs:
 			for alpha_nL in alpha_nl_array:
 				for i in xrange(partitions):
+					if useruser is False:
+						suffix = '_similarity_ml100k_' + str(i) + '.mat'
+					else:
+						suffix = '_similarity_ml100k_' + str(i) + '_useruser' + '.mat'
+
 					helper.main_diffusion(matrixfunc, alpha_nL, 
 						threshold_fraction, transform=transform, 
-						simmat_suffix='_similarity_ml100k_' + str(i) + '.mat', 
+						simmat_suffix= suffix, 
 						output_prefix= str(i) + '_')
 
 				dataFileName = "ml-100k/u.data"
@@ -51,9 +56,9 @@ def run_test_set_partitions(threshold_fraction=0.3, transform=helper.transformat
 
 # create similarity matrices in the current directory
 def create_similarity_matrices(numUsers, numItems,source=filename,
-	suffix='_similarity_ml100k.mat',file_delimiter='\t'):
+	suffix='_similarity_ml100k.mat',file_delimiter='\t', useruser=False):
 	for func in similarity_matrix_funcs:
-		helper.main_similarity(func,source,numUsers,numItems,outsuffix=suffix, file_delimiter=file_delimiter)
+		helper.main_similarity(func,source,numUsers,numItems,outsuffix=suffix, file_delimiter=file_delimiter,useruser=useruser)
 
 
 def analyse_csv():
@@ -149,16 +154,17 @@ if __name__ == '__main__':
 	for i in xrange(5):
 		create_similarity_matrices(helper.defaultNumUsers, helper.defaultNumItems, 
 			source='ml-100k/u.data-crossfold/train.' + str(i) + '.csv', 
-			suffix='_similarity_ml100k_' + str(i) + '.mat',
-			file_delimiter=',')
+			suffix='_similarity_ml100k_' + str(i) + '_useruser' + '.mat',
+			file_delimiter=',', useruser=True)
 	"""
+
 
 	threshold = 0.08
 	k = 50
 
 	for transform, tname in [(helper.transformation_linear,'linear')]:
-		for threshold in [0.07, 0.075, 0.08, 0.085]:
-			run_test_set_partitions(threshold_fraction=threshold, transform=transform, knn=k)
+		for threshold in [0.08]:
+			run_test_set_partitions(threshold_fraction=threshold, transform=transform, knn=k, useruser=True)
 			analyse_csv()
 			subprocess.call("mkdir results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname, shell=True)
 			subprocess.call("mv *.csv results_threshold_" + str(threshold) + "k_" + str(k) + "_" + tname, shell=True)
