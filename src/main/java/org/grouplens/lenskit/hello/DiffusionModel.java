@@ -3,8 +3,6 @@ package org.grouplens.lenskit.hello;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.grouplens.grapht.annotation.DefaultProvider;
 import org.grouplens.lenskit.core.Shareable;
-import org.grouplens.lenskit.vectors.ImmutableSparseVector;
-import org.grouplens.lenskit.vectors.SparseVector;
 
 import java.io.Serializable;
 
@@ -15,9 +13,7 @@ import java.io.Serializable;
  * recommenders.
  */
 @DefaultProvider(DiffusionModelBuilder.class)
-@Shareable
-public class DiffusionModel implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class DiffusionModel {
     private final RealMatrix diffusionMatrix;
 
     public DiffusionModel(RealMatrix diffusionMatrix) {

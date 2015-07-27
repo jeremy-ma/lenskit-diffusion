@@ -1,14 +1,10 @@
 package org.grouplens.lenskit.hello;
 
-import com.jmatio.io.MatFileReader;
-import com.jmatio.types.MLDouble;
-import org.apache.commons.math3.exception.OutOfRangeException;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.grouplens.lenskit.vectors.SparseVector;
-import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
 import org.grouplens.lenskit.vectors.VectorEntry;
+import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
 
 import javax.inject.Inject;
 import java.util.HashMap;

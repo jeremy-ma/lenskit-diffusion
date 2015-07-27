@@ -2,19 +2,15 @@ package org.grouplens.lenskit.hello;
 
 import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLDouble;
-import org.apache.commons.lang3.builder.Diff;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.grouplens.lenskit.vectors.SparseVector;
-import org.grouplens.lenskit.vectors.VectorEntry;
-import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-
-import java.lang.reflect.Array;
-import java.util.HashMap;
+import org.grouplens.lenskit.vectors.SparseVector;
+import org.grouplens.lenskit.vectors.VectorEntry;
+import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
 
 import javax.inject.Inject;
+import java.util.HashMap;
 
 /**
  * Created by jeremyma on 22/04/15.
@@ -23,7 +19,7 @@ public class DiffusedDistanceVectorSimilarity implements VectorSimilarity {
     private RealMatrix diffMatrix = null;
     private HashMap<SparseVector, ArrayRealVector> cache = null;
     @Inject
-    public DiffusedDistanceVectorSimilarity(@DiffusionMatrixType String diffusionFileName){
+    public DiffusedDistanceVectorSimilarity(@MatrixFileName String diffusionFileName){
         //read in the matrix
         try{
             MatFileReader reader = new MatFileReader(diffusionFileName);

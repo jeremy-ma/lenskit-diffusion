@@ -24,17 +24,10 @@ package org.grouplens.lenskit.hello;
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-import org.grouplens.grapht.annotation.DefaultInteger;
 import org.grouplens.lenskit.core.Parameter;
 
 import javax.inject.Qualifier;
-
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 
 /**
@@ -45,5 +38,5 @@ import java.lang.annotation.Target;
 @Qualifier
 @Target({ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DiffusionMatrixType {
+public @interface MatrixFileName {
 }

@@ -3,10 +3,13 @@ package org.grouplens.lenskit.hello
 /**
  * Created by jeremyma on 22/04/15.
  */
-import org.grouplens.lenskit.iterative.*
-import org.grouplens.lenskit.knn.item.*
-import org.grouplens.lenskit.mf.funksvd.*
-import org.grouplens.lenskit.transform.normalize.*
+import org.grouplens.lenskit.iterative.IterationCount
+import org.grouplens.lenskit.iterative.LearningRate
+import org.grouplens.lenskit.knn.item.ItemItemScorer
+import org.grouplens.lenskit.mf.funksvd.FeatureCount
+import org.grouplens.lenskit.mf.funksvd.FunkSVDItemScorer
+import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer
+import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer
 
 trainTest {
     dataset crossfold("ml-100k") {

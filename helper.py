@@ -4,7 +4,6 @@ import scipy.io
 from scipy.sparse import csgraph
 from scipy.spatial.distance import cosine
 import sys, editdistance
-from scipy.special import logit
 import pdb
 
 defaultNumUsers,defaultNumItems = 943, 1682
@@ -95,8 +94,8 @@ def transformation_exp(similarity):
     return np.exp(similarity) - 1.0
 
 
-def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear, threshold_normalized=True):
-    # performs the calculations to create the diffusion matrices
+def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear, threshold_absolute=True):
+    # performs the calculations to create the diffusion matrices:
 
     #thresholding code for absolute laplacian
     """
@@ -107,7 +106,7 @@ def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=tra
     print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
     """
     copy = np.copy(simmat)
-    if threshold_normalized is True:
+    if threshold_absolute is True:
         print "Thresholding for absolute laplacian"
         threshold = find_threshold(np.abs(copy), threshold_fraction)
         copy[np.logical_and(copy > -(threshold)/2, copy<threshold)] = 0.0
@@ -223,130 +222,53 @@ def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3,
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs_n.mat', mdict={'diffusion':diff_abs_n})
 
-
-# removes the year and foreign language translation from the movie name
-def process_name(name):
-    return name.rstrip()
-
-
-def isolate_name(name):
-    return name.split('(')[0].rstrip()
-
-
-def modify_ml100k_movienames():
-    # reduce ml10M dataset to just the movies in the ml100k dataset
-    ml100k_mapping = {}
-    ml100k_movies = open('ml-100k/u.item.modified')
-    ml10M_movies = open('../preprocessing/ml-1m/movies.dat')
-    for line in ml100k_movies:
-        line = line.split('|')
-        movid = int(line[0])
-        movname = process_name(line[1])
-        ml100k_mapping[movname] = movid
-
-    ml10M_to_ml100k = {}
-
-    ml10M_mapping = {}
-
-    num_matched = 0
-    for line in ml10M_movies:
-        line = line.split('::')
-        movname = process_name(line[1])
-        ml10M_mapping[movname] = int(line[0])
-        if movname in ml100k_mapping:
-            ml10M_to_ml100k[int(line[0])] = ml100k_mapping[movname]
-            num_matched += 1
-
-    print num_matched
-
-    ml100k_movies = open('ml-100k/u.item.modified')
-
-    new = open('ml-100k/u.item.modified.twice', 'w')
-    stuff = []
-    replacements = set()
-
-    for line in ml100k_movies:
-        line = line.split('|')
-        movname = process_name(line[1])
-        if movname not in ml10M_mapping:
-            print movname
-            replaced = False
-            min_edit_dist = 1000000000000
-            movieList = open('../preprocessing/ml-1m/movies.dat')
-
-            for movie in movieList:
-
-                movie = movie.split('::')[1]
-                if process_name(movie) in ml100k_mapping or movie in replacements:
-                    continue
-
-                if movname in movie or isolate_name(movname) in movie:
-                    print "replacing {0} with {1}".format(movname, movie)
-                    line[1] = movie
-                    replaced = True
-                    replacements.add(movie)
-                    break
-                else:
-                    dist = editdistance.eval(movie, movname)
-                    if dist < min_edit_dist:
-                        min_edit_dist = dist
-                        candidate = movie
-
-            if replaced is False:
-                print "Replacing Min Edit Distance {0} with {1}".format(movname, candidate)
-                line[1] = candidate
-                replacements.add(candidate)
-
-            print "######################"
-
-        line = '|'.join(line)
-        stuff.append(line)
-
-    new.write(''.join(stuff))
+def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine', alpha_nL=1.0, threshold_fraction=0.08,
+                          transform=transformation_linear, output_prefix=''):
+    
+    # get utility matrix
+    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
+    # create similarity matrices
+    print "creating similarity matrix....."
+    if sim_func == 'cosine':
+        similarity_func = create_similarity_cosine
+    elif sim_func == 'adjusted_cosine':
+        similarity_func = create_similarity_adjusted_cosine
+    elif sim_func == 'pearson':
+        similarity_func = create_similarity_pearson_correlation
 
 
-def reduce_ml10M_ml100k():
-    # reduce ml10M dataset to just the movies in the ml100k dataset
-    ml100k_mapping = {}
-    ml100k_movies = open('ml-100k/u.item.modified.twice')
-    ml10M_movies = open('../preprocessing/ml-1m/movies.dat')
-    for line in ml100k_movies:
-        line = line.split('|')
-        movid = int(line[0])
-        movname = process_name(line[1])
-        if movname in ml100k_mapping:
-            print movname
-        ml100k_mapping[movname] = movid
 
+    similarity_uu = similarity_func(utility)
+    similarity_ii = similarity_func(utility.T)
 
-    ml10M_to_ml100k = {}
+    print "creating diffusion matrices"
 
-    ml10M_mapping = {}
-    matched = set()
-    num_matched = 0
-    for line in ml10M_movies:
-        line = line.split('::')
-        movname = process_name(line[1])
-        ml10M_mapping[movname] = int(line[0])
-        if movname in ml100k_mapping:
-            if movname in matched:
-                print movname
-            ml10M_to_ml100k[int(line[0])] = ml100k_mapping[movname]
-            num_matched += 1
-            matched.add(movname)
+    diff_uu,diff_uu_n, diff_uu_abs, diff_uu_abs_n = create_diffusion(similarity_uu, alpha_nL, threshold_fraction,
+                                                                     transform, threshold_absolute=True)
+    diff_ii,diff_ii_n, diff_ii_abs, diff_ii_abs_n = create_diffusion(similarity_ii, alpha_nL, threshold_fraction,
+                                                                     transform, threshold_absolute=True)
 
-    print num_matched, len(ml100k_mapping)
-    new = open('ml10M_reduced/ml1M_ml100K.dat', 'a')
-    ml10M_data = open('../preprocessing/ml-1m/ratings.dat')
+    # mean center utility matrix
+    for i in xrange(utility.shape[0]):
+        utility[i,:] = utility[i,:] - utility[i,:].sum() / float(np.count_nonzero(utility[i,:]))
 
-    for line in ml10M_data:
-        line = line.split('::')
-        ml10M_movid = int(line[1])
-        if ml10M_movid in ml10M_to_ml100k:
-            line[1] = str(ml10M_to_ml100k[ml10M_movid])
-            new.write('\t'.join(line))
+    print utility.shape, diff_uu.shape
 
+    print "diffusing utility matrices"
+    util_diff = utility.dot(diff_uu)
+    util_diff_n = utility.dot(diff_uu_n)
 
+    print util_diff.shape, diff_ii.shape
+
+    util_diff = diff_ii.dot(util_diff)
+    util_diff_n = diff_ii_n.dot(util_diff)
+
+    print "saving"
+
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff.mat',mdict={'utility':util_diff})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n.mat',mdict={'utility':util_diff_n})
+
+    return (util_diff,util_diff_n)
 
 if __name__=='__main__':
 

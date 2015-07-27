@@ -21,60 +21,35 @@
  */
 package org.grouplens.lenskit.hello;
 
-import groovy.util.Eval;
-import org.apache.commons.math3.analysis.function.Cos;
-import org.apache.commons.math3.genetics.StoppingCondition;
-import org.codehaus.groovy.tools.shell.Command;
-import org.grouplens.lenskit.ItemRecommender;
 import org.grouplens.lenskit.ItemScorer;
-import org.grouplens.lenskit.Recommender;
-import org.grouplens.lenskit.RecommenderBuildException;
 import org.grouplens.lenskit.baseline.BaselineScorer;
 import org.grouplens.lenskit.baseline.ItemMeanRatingItemScorer;
 import org.grouplens.lenskit.baseline.UserMeanBaseline;
 import org.grouplens.lenskit.baseline.UserMeanItemScorer;
 import org.grouplens.lenskit.core.LenskitConfiguration;
-import org.grouplens.lenskit.core.LenskitRecommender;
-import org.grouplens.lenskit.data.dao.EventDAO;
-import org.grouplens.lenskit.data.dao.SimpleFileRatingDAO;
 import org.grouplens.lenskit.eval.EvalConfig;
-import org.grouplens.lenskit.eval.EvalProject;
 import org.grouplens.lenskit.eval.algorithm.AlgorithmInstance;
 import org.grouplens.lenskit.eval.data.CSVDataSource;
 import org.grouplens.lenskit.eval.data.CSVDataSourceBuilder;
-import org.grouplens.lenskit.eval.data.crossfold.CrossfoldTask;
-import org.grouplens.lenskit.eval.data.traintest.GenericTTDataBuilder;
-import org.grouplens.lenskit.eval.data.traintest.GenericTTDataSet;
-import org.grouplens.lenskit.eval.data.traintest.TTDataSet;
-import org.grouplens.lenskit.eval.metrics.predict.*;
-import org.grouplens.lenskit.eval.script.EvalScript;
-import org.grouplens.lenskit.eval.traintest.MetricFactory;
+import org.grouplens.lenskit.eval.metrics.predict.CoveragePredictMetric;
+import org.grouplens.lenskit.eval.metrics.predict.MAEPredictMetric;
+import org.grouplens.lenskit.eval.metrics.predict.NDCGPredictMetric;
+import org.grouplens.lenskit.eval.metrics.predict.RMSEPredictMetric;
 import org.grouplens.lenskit.eval.traintest.SimpleEvaluator;
-import org.grouplens.lenskit.eval.traintest.TrainTestEvalTask;
 import org.grouplens.lenskit.iterative.IterationCount;
-import org.grouplens.lenskit.iterative.IterationCountStoppingCondition;
 import org.grouplens.lenskit.iterative.RegularizationTerm;
 import org.grouplens.lenskit.knn.NeighborhoodSize;
-import org.grouplens.lenskit.knn.item.*;
-import org.grouplens.lenskit.knn.item.model.ItemItemModelBuilder;
+import org.grouplens.lenskit.knn.item.ItemItemScorer;
+import org.grouplens.lenskit.knn.item.ItemSimilarity;
 import org.grouplens.lenskit.knn.user.NeighborFinder;
 import org.grouplens.lenskit.knn.user.SnapshotNeighborFinder;
 import org.grouplens.lenskit.knn.user.UserUserItemScorer;
 import org.grouplens.lenskit.mf.funksvd.FunkSVDItemScorer;
-import org.grouplens.lenskit.scored.ScoredId;
 import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer;
-import org.grouplens.lenskit.transform.normalize.MeanCenteringVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
-import org.grouplens.lenskit.transform.normalize.VectorNormalizer;
 import org.grouplens.lenskit.vectors.similarity.*;
-import org.grouplens.lenskit.vectors.similarity.DiffusedPearsonCorrelation;
-import org.grouplens.lenskit.vectors.similarity.TestVectorSimilarity;
-import sun.java2d.pipe.SpanShapeRenderer;
 
-import javax.activation.DataSource;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -135,7 +110,6 @@ public class HelloLenskit implements Runnable {
                 .to(ItemMeanRatingItemScorer.class);
         config.bind(UserVectorNormalizer.class)
                 .to(BaselineSubtractingUserVectorNormalizer.class);
-
     }
 
     private void set_config_mean_predictor(LenskitConfiguration config){
@@ -181,10 +155,10 @@ public class HelloLenskit implements Runnable {
             config_diff_abs.bind(VectorSimilarity.class).to(DiffusedDistanceVectorSimilarity.class);
         }
 
-        config_diff.set(DiffusionMatrixType.class).to("ml100k_udiff.mat");
-        config_diff_n.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
-        config_diff_abs.set(DiffusionMatrixType.class).to("ml100k_udiff_abs.mat");
-        config_diff_abs_n.set(DiffusionMatrixType.class).to("ml100k_udiff_abs_n.mat");
+        config_diff.set(MatrixFileName.class).to("ml100k_udiff.mat");
+        config_diff_n.set(MatrixFileName.class).to("ml100k_udiff_n.mat");
+        config_diff_abs.set(MatrixFileName.class).to("ml100k_udiff_abs.mat");
+        config_diff_abs_n.set(MatrixFileName.class).to("ml100k_udiff_abs_n.mat");
 
         AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity", config_reg);
         AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity", config_diff);
@@ -214,8 +188,8 @@ public class HelloLenskit implements Runnable {
         set_config_itemitem(config_reg);
         set_config_itemitem(config_diff);
 
-        config_diff_n.set(DiffusionMatrixType.class).to("ml100k_udiff_n.mat");
-        config_diff.set(DiffusionMatrixType.class).to("ml100k_udiff.mat");
+        config_diff_n.set(MatrixFileName.class).to("ml100k_udiff_n.mat");
+        config_diff.set(MatrixFileName.class).to("ml100k_udiff.mat");
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -243,6 +217,44 @@ public class HelloLenskit implements Runnable {
         return simpleEval;
     }
 
+    private SimpleEvaluator DoubleDiffItemItemEval(int numThreads){
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_itemitem(config_diff_n);
+        set_config_itemitem(config_reg);
+        set_config_itemitem(config_diff);
+
+        config_diff_n.set(MatrixFileName.class).to("ml100k_util_diff_n.mat");
+        config_diff.set(MatrixFileName.class).to("ml100k_util_diff.mat");
+
+        if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
+            config_reg.bind(ItemSimilarity.class).to(PrediffusedCosineVectorSimilarity.class);
+            config_diff_n.bind(ItemSimilarity.class).to(PrediffusedCosineVectorSimilarity.class);
+            config_diff.bind(ItemSimilarity.class).to(PrediffusedCosineVectorSimilarity.class);
+        } else {
+            config_reg.bind(VectorSimilarity.class).to(PearsonCorrelation.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+            config_diff.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+        }
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_reg);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("doublediffusion_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_diff);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("doublediffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF", config_diff_n);
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(diffusion_algo);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+
+        return simpleEval;
+    }
+
+
     public HelloLenskit(String[] args) {
         if (args.length >= 5) {
             System.out.println("Running test with custom settings");
@@ -269,11 +281,8 @@ public class HelloLenskit implements Runnable {
 
         SimpleEvaluator simpleEval;
 
-        if (false){
-            simpleEval = UserUserEval(4);
-        } else {
-            simpleEval = ItemItemEval(4);
-        }
+        //add some double diffusion
+        simpleEval = DoubleDiffItemItemEval(4);
 
         //add some funk SVD
         LenskitConfiguration config_SVD = new LenskitConfiguration();

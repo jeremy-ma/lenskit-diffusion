@@ -15,21 +15,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Model builder that computes the global and item biases.
+ * by jeremy ma
  */
-public class DiffusionModelBuilder implements Provider<DiffusionModel> {
+public class DiffusedUtilityModelBuilder implements Provider<DiffusedUtilityModel> {
     private final EventDAO dao;
     private final String diffusionMatrixFileName;
     private static final String precomputedFilePath = "precomputed_matrices/";
 
     @Inject
-    public DiffusionModelBuilder(@Transient EventDAO dao, @MatrixFileName String diffusionFileName) {
+    public DiffusedUtilityModelBuilder(@Transient EventDAO dao, @MatrixFileName String diffusionFileName) {
         this.dao = dao;
         this.diffusionMatrixFileName = diffusionFileName;
     }
 
     @Override
-    public DiffusionModel get() {
+    public DiffusedUtilityModel get() {
 
         // get the name of the input file
         //System.out.println(dao.toString());
@@ -50,21 +50,21 @@ public class DiffusionModelBuilder implements Provider<DiffusionModel> {
         matcher.find();
         int partitionNum = Integer.parseInt(matcher.group(1));
         System.out.println(partitionNum);
-        RealMatrix diffMatrix = null;
+        RealMatrix diffusedUtilityMatrix = null;
 
         //read in the precomputed matrix
         //TODO: do all preprocessing in Java, make similarity matrix etc.
         try{
             MatFileReader reader = new MatFileReader(precomputedFilePath + String.valueOf(partitionNum) + '_' + this.diffusionMatrixFileName);
-            MLDouble red = (MLDouble) reader.getMLArray("diffusion");
+            MLDouble red = (MLDouble) reader.getMLArray("utility");
             double [][] diffusion = red.getArray();
-            diffMatrix = MatrixUtils.createRealMatrix(diffusion);
+            diffusedUtilityMatrix = MatrixUtils.createRealMatrix(diffusion);
             System.out.println("Matrix is made");
         } catch (Exception e){
             System.out.println(e.getMessage());
-            System.out.println("Failed to read in the diffusion matrix");
+            System.out.println("Failed to read in the diffused utility matrix");
         }
 
-        return new DiffusionModel(diffMatrix);
+        return new DiffusedUtilityModel(diffusedUtilityMatrix);
     }
 }

@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="src">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../commons-math3-3.5" />
+      <root url="file://$PROJECT_DIR$/../../readmatrix" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/../../commons-math3-3.5/docs/apidocs" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../JMatIO-041212/src" />
+      <root url="file://$PROJECT_DIR$/../../JMatIO-041212/test" />
+      <root url="file://$PROJECT_DIR$/../../readmatrix/src" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/../../commons-math3-3.5" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../../readmatrix" recursive="false" />
+  </library>
+</component>
