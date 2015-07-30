@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import pearsonr
 import scipy.io
 from scipy.sparse import csgraph
-from scipy.spatial.distance import cosine
+from scipy.spatial.distance import cosine, pdist, squareform
 import sys, editdistance
 import pdb
 
@@ -28,6 +28,21 @@ def create_utility_matrix(filename, numUsers, numItems, file_delimiter='\t'):
 def symmetrize(a):
     return a + a.T - np.diag(a.diagonal())
 
+def mean_center(utility, include_mean_vector=False):
+    # mean center and zero entries
+    zero_indices = np.where(utility==0)
+    # mean centre the ratings for each user (leaving 0's unaffected)
+    means = utility.sum(1)/(utility != 0).sum(1)
+    means[np.isnan(means)] = 0.0
+    means = means.reshape(-1,1)
+    utility = utility - means
+    utility[zero_indices] = 0.0
+
+    if include_mean_vector is False:
+        return utility
+    else:
+        return (utility, means)
+
 # create similarity matrix based on the pearson correlation measure
 def create_similarity_pearson_correlation(utility):
     numColumns = utility.shape[1]
@@ -46,39 +61,17 @@ def create_similarity_pearson_correlation(utility):
 
 def create_similarity_cosine(utility):
     # create similarity matrix using cosine similarity
-    numColumns = utility.shape[1]
-    similarity = np.zeros((numColumns,numColumns))
-    for i in xrange(numColumns):
-        for j in xrange(i,numColumns):
-            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
-                continue
-            sim = 1 - cosine(utility[:,i],utility[:,j])
-            similarity[i][j], similarity[j][i] = sim, sim
+    similarity = squareform(pdist(utility,'cosine'))
+    similarity = 1 - similarity
+    #set nan to zero
+    similarity[np.isnan(similarity)] = 0.0
 
     return similarity
 
 def create_similarity_adjusted_cosine(utility):
     # create similarity matrix using the adjusted cosine similarity measure
-    numRows, numColumns = utility.shape
-    similarity = np.zeros((numColumns,numColumns))
-    # mean centre the ratings for each user (leaving 0's unaffected)
-    for u in xrange(numRows):
-        if np.count_nonzero(utility[u,:]) == 0:
-            # don't mean center zero vectors
-            continue
-        zero_indices = np.where(utility[u,:] == 0)[0]
-        utility[u,:] = utility[u,:] - utility[u,:].sum() / float(np.count_nonzero(utility[u,:]))
-        utility[u,:][zero_indices] = 0.0
-
-    for i in xrange(numColumns):
-        for j in xrange(i,numColumns):
-            #calculate the cosine correlation between two movies
-            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
-                continue
-            sim = 1 - cosine(utility[:,i],utility[:,j])
-            similarity[i][j], similarity[j][i] = sim, sim
-
-    return similarity
+    utility = mean_center(utility)
+    return create_similarity_cosine(utility)
 
 def transformation_linear(similarity):
     # no transform
@@ -94,17 +87,11 @@ def transformation_exp(similarity):
     return np.exp(similarity) - 1.0
 
 
-def create_diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear, threshold_absolute=True):
+def diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transformation_linear, threshold_absolute=True):
     # performs the calculations to create the diffusion matrices:
 
     #thresholding code for absolute laplacian
-    """
-    abs_threshold = find_threshold(np.abs(simmat), threshold_fraction)
-    copy = np.copy(simmat)
-    copy[np.logical_and(copy > -abs_threshold, copy < abs_threshold)] = 0.0
-    # print abs_threshold
-    print "{0} percent nonzero (absolute)".format(np.count_nonzero(copy)/float(len(simmat)**2) * 100.0 )
-    """
+
     copy = np.copy(simmat)
     if threshold_absolute is True:
         print "Thresholding for absolute laplacian"
@@ -204,31 +191,23 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data',
 
     print "done"
 
-def main_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, 
-                    numItems=defaultNumItems, numUsers=defaultNumUsers, transform=transformation_linear,
-                    simmat_suffix='_similarity_ml100k.mat', output_prefix=''):
+def create_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, 
+                    numItems=defaultNumItems, numUsers=defaultNumUsers, 
+                    transform=transformation_linear, output_prefix=''):
     # this function creates and writes the diffusion matrix files
 
     # use a similarity matrix which has nonzero values
     similarity = scipy.io.loadmat(matrix_path + sim_func + simmat_suffix)['similarity']
 
     print "creating diffusion matrix alpha_nL: " + str(alpha_nL)
-    diff, diff_n, diff_abs, diff_abs_n = create_diffusion(similarity, alpha_nL,threshold_fraction, transform)
+    diff, diff_n, diff_abs, diff_abs_n = diffusion(similarity, alpha_nL,threshold_fraction, transform)
     print "saving"
 
-    # save both the normalized and regular diffusion matrices
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff.mat',mdict={'diffusion':diff})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_n.mat',mdict={'diffusion':diff_n})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs.mat',mdict={'diffusion':diff_abs})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_udiff_abs_n.mat', mdict={'diffusion':diff_abs_n})
+    return (diff, diff_n, diff_abs, diff_abs_n)
 
 def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine', alpha_nL=1.0, threshold_fraction=0.08,
-                          transform=transformation_linear, output_prefix=''):
+                          transform=transformation_linear, output_prefix='', reverse=False):
     
-    # get utility matrix
-    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
-    # create similarity matrices
-    print "creating similarity matrix....."
     if sim_func == 'cosine':
         similarity_func = create_similarity_cosine
     elif sim_func == 'adjusted_cosine':
@@ -236,39 +215,63 @@ def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine
     elif sim_func == 'pearson':
         similarity_func = create_similarity_pearson_correlation
 
+    # default, diffuse by useruser diffusion then itemitem diffusion
 
+    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
+    original_util = utility.copy()
+    original_nonzero = np.nonzero(original_util)
+
+    if reverse is True:
+        utility = utility.T
 
     similarity_uu = similarity_func(utility)
-    similarity_ii = similarity_func(utility.T)
 
-    print "creating diffusion matrices"
+    # print similarity_uu.shape
+    diff_uu,diff_uu_n,_,_ = diffusion(similarity_uu, alpha_nL, threshold_fraction,
+                                                                     transform, threshold_absolute=False)
+    utility, mean = mean_center(utility, include_mean_vector=True)
+    util_diff = diff_uu.dot(utility)
+    util_diff_n = diff_uu_n.dot(utility)
 
-    diff_uu,diff_uu_n, diff_uu_abs, diff_uu_abs_n = create_diffusion(similarity_uu, alpha_nL, threshold_fraction,
-                                                                     transform, threshold_absolute=True)
-    diff_ii,diff_ii_n, diff_ii_abs, diff_ii_abs_n = create_diffusion(similarity_ii, alpha_nL, threshold_fraction,
-                                                                     transform, threshold_absolute=True)
+    util_diff += mean
+    util_diff_n += mean
 
-    # mean center utility matrix
-    for i in xrange(utility.shape[0]):
-        utility[i,:] = utility[i,:] - utility[i,:].sum() / float(np.count_nonzero(utility[i,:]))
+    similarity_ii = similarity_func(util_diff.T)
+    similarity_ii_n = similarity_func(util_diff_n.T)
 
-    print utility.shape, diff_uu.shape
+    diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
+    _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
 
-    print "diffusing utility matrices"
-    util_diff = utility.dot(diff_uu)
-    util_diff_n = utility.dot(diff_uu_n)
+    util_diff, mean_diff = mean_center(util_diff.T, include_mean_vector=True)
+    util_diff_n, mean_diff_n = mean_center(util_diff_n.T, include_mean_vector=True)
 
-    print util_diff.shape, diff_ii.shape
-
+    # diffuse again then change back to previous form
     util_diff = diff_ii.dot(util_diff)
-    util_diff_n = diff_ii_n.dot(util_diff)
+    util_diff_n = diff_ii_n.dot(util_diff_n)
+    util_diff_complete_n = (util_diff_n + mean_diff_n)
+    util_diff_complete = (util_diff + mean_diff)
+
+    if reverse is False:
+        util_diff = util_diff.T
+        util_diff_n = util_diff_n.T
+        util_diff_complete = util_diff_complete.T
+        util_diff_complete_n = util_diff_complete_n.T
+
+    #keep the original values for the diffused complete matrix
+    util_diff_complete[original_nonzero] = original_util[original_nonzero]
+    util_diff_complete_n[original_nonzero] = original_util[original_nonzero]
 
     print "saving"
 
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff.mat',mdict={'utility':util_diff})
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n.mat',mdict={'utility':util_diff_n})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_complete.mat', mdict={'utility':util_diff_complete})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n_complete', mdict={'utility':util_diff_complete_n})
 
-    return (util_diff,util_diff_n)
+    return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
+
+
+
 
 if __name__=='__main__':
 

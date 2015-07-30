@@ -15,13 +15,13 @@ import java.io.Serializable;
  * Created by jeremyma on 27/07/15.
  */
 @Shareable
-public class PrediffusedCosineVectorSimilarity implements UserSimilarity, ItemSimilarity, Serializable {
+public class PrediffusedUserCosineSimilarity implements UserSimilarity, Serializable{
 
     private static final long serialVersionUID = 1L;
     private RealMatrix diffusedUtility = null;
 
     @Inject
-    public PrediffusedCosineVectorSimilarity(DiffusedUtilityModel model) {
+    public PrediffusedUserCosineSimilarity(DiffusedUtilityModel model) {
         diffusedUtility = model.getDiffusionMatrix();
     }
 
@@ -30,21 +30,14 @@ public class PrediffusedCosineVectorSimilarity implements UserSimilarity, ItemSi
         RealVector u1 = null;
         RealVector u2 = null;
 
-        if ( v1.keyDomain().size() == diffusedUtility.getColumnDimension() ){
-            u1 = diffusedUtility.getColumnVector((int) i1);
-            u2 = diffusedUtility.getColumnVector((int) i2);
-        } else if (v1.keyDomain().size() == diffusedUtility.getRowDimension()) {
-            u1 = diffusedUtility.getColumnVector((int) i1);
-            u2 = diffusedUtility.getColumnVector((int) i2);
-        } else {
-            System.out.println("Dimension mismatch");
-        }
+        u1 = diffusedUtility.getRowVector((int) i1 - 1);
+        u2 = diffusedUtility.getRowVector((int) i2 - 1);
         return u1.cosine(u2);
     }
 
     @Override
     public boolean isSparse() {
-        return true;
+        return false;
     }
 
     @Override
