@@ -241,75 +241,12 @@ def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine
         similarity_ii_n = similarity_func(util_diff_n.T)
     else:
         #use originial similarity matrices
-        similarity_ii = similarity_func(original_util.T)
+        if util_diff.shape != original_util.shape:
+            similarity_ii = similarity_func(original_util)
+        else:
+            similarity_ii = similarity_func(original_util.T)
         similarity_ii_n = similarity_ii.copy()
 
-    diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
-    _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
-
-    util_diff, mean_diff = mean_center(util_diff.T, include_mean_vector=True)
-    util_diff_n, mean_diff_n = mean_center(util_diff_n.T, include_mean_vector=True)
-
-    # diffuse again then change back to previous form
-    util_diff = diff_ii.dot(util_diff)
-    util_diff_n = diff_ii_n.dot(util_diff_n)
-    util_diff_complete_n = (util_diff_n + mean_diff_n)
-    util_diff_complete = (util_diff + mean_diff)
-
-    if reverse is False:
-        util_diff = util_diff.T
-        util_diff_n = util_diff_n.T
-        util_diff_complete = util_diff_complete.T
-        util_diff_complete_n = util_diff_complete_n.T
-
-    #keep the original values for the diffused complete matrix
-    util_diff_complete[original_nonzero] = original_util[original_nonzero]
-    util_diff_complete_n[original_nonzero] = original_util[original_nonzero]
-
-    print "saving"
-
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff.mat',mdict={'utility':util_diff})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n.mat',mdict={'utility':util_diff_n})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_complete.mat', mdict={'utility':util_diff_complete})
-    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n_complete', mdict={'utility':util_diff_complete_n})
-
-    return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
-
-
-
-def main_double_diffusion_independent(input_file='ml-100k/u.data', sim_func='adjusted_cosine', alpha_nL=1.0, threshold_fraction=0.08,
-                          transform=transformation_linear, output_prefix='', reverse=False):
-    
-    if sim_func == 'cosine':
-        similarity_func = create_similarity_cosine
-    elif sim_func == 'adjusted_cosine':
-        similarity_func = create_similarity_adjusted_cosine
-    elif sim_func == 'pearson':
-        similarity_func = create_similarity_pearson_correlation
-
-    # default, diffuse by useruser diffusion then itemitem diffusion
-
-    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
-    original_util = utility.copy()
-    original_nonzero = np.nonzero(original_util)
-
-    if reverse is True:
-        utility = utility.T
-
-    similarity_uu = similarity_func(utility)
-
-    # print similarity_uu.shape
-    diff_uu,diff_uu_n,_,_ = diffusion(similarity_uu, alpha_nL, threshold_fraction,
-                                                                     transform, threshold_absolute=False)
-    utility, mean = mean_center(utility, include_mean_vector=True)
-    util_diff = diff_uu.dot(utility)
-    util_diff_n = diff_uu_n.dot(utility)
-
-    util_diff += mean
-    util_diff_n += mean
-
-    similarity_ii = similarity_func(original_util.T)
-    similarity_ii_n = similarity_func(original_util.T)
 
     diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
     _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
@@ -341,8 +278,6 @@ def main_double_diffusion_independent(input_file='ml-100k/u.data', sim_func='adj
     scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n_complete', mdict={'utility':util_diff_complete_n})
 
     return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
-
-
 
 if __name__=='__main__':
 
