@@ -71,7 +71,8 @@ def create_similarity_cosine(utility):
 def create_similarity_adjusted_cosine(utility):
     # create similarity matrix using the adjusted cosine similarity measure
     utility = mean_center(utility)
-    return create_similarity_cosine(utility)
+    print utility
+    return create_similarity_cosine(utility.T)
 
 def transformation_linear(similarity):
     # no transform
@@ -193,7 +194,7 @@ def main_similarity(sim_func ='cosine', filename='ml-100k/u.data',
 
 def create_diffusion(sim_func = 'cosine', alpha_nL=1.0, threshold_fraction = 0.3, 
                     numItems=defaultNumItems, numUsers=defaultNumUsers, 
-                    transform=transformation_linear, output_prefix=''):
+                    transform=transformation_linear, simmat_suffix='_similarity_ml100k.mat'):
     # this function creates and writes the diffusion matrix files
 
     # use a similarity matrix which has nonzero values
@@ -248,8 +249,8 @@ def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine
         similarity_ii_n = similarity_ii.copy()
 
 
-    diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
-    _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL, threshold_fraction, transform, threshold_absolute=False)
+    diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL*10, threshold_fraction, transform, threshold_absolute=False)
+    _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL*10, threshold_fraction, transform, threshold_absolute=False)
 
     util_diff, mean_diff = mean_center(util_diff.T, include_mean_vector=True)
     util_diff_n, mean_diff_n = mean_center(util_diff_n.T, include_mean_vector=True)
@@ -279,11 +280,203 @@ def main_double_diffusion(input_file='ml-100k/u.data', sim_func='adjusted_cosine
 
     return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
 
+def diffuse_ignore_missing(diff_mat, utility, original_util):
+    # for each movie, zero the columns corresponding to users who have not watched that movie
+    result = np.zeros(utility.shape)
+
+    for m in xrange(utility.shape[1]):
+        D = diff_mat.copy()
+        R_orig = original_util[:,m]
+        # get indices of users who did not rate the movie
+        u_norate = R_orig==0
+        R = utility[:,m]
+        D[:,u_norate] = 0.0
+        rowsum = D.sum(axis=1)
+        # renormalise
+        #D = D / rowsum
+        #D[rowsum == 0] = 0
+        result[:,m] = D.dot(R)
+
+    return result
+
+
+def diffusion_missing_values(input_file='ml-100k/u.data', sim_func='adjusted_cosine', alpha_nL=1.0, threshold_fraction=0.08,
+                          transform=transformation_linear, output_prefix='', reverse=False):
+
+    if sim_func == 'cosine':
+        similarity_func = create_similarity_cosine
+    elif sim_func == 'adjusted_cosine':
+        similarity_func = create_similarity_adjusted_cosine
+    elif sim_func == 'pearson':
+        similarity_func = create_similarity_pearson_correlation
+
+    # default, diffuse by useruser diffusion then itemitem diffusion
+
+    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
+    original_util = utility.copy()
+    original_nonzero = np.nonzero(original_util)
+    orig_copy = original_util.copy()
+
+    if reverse is True:
+        utility = utility.T
+        orig_copy = orig_copy.T
+
+    similarity_uu = similarity_func(utility)
+
+    # print similarity_uu.shape
+    diff_uu,diff_uu_n,_,_ = diffusion(similarity_uu, alpha_nL, threshold_fraction,
+                                                                     transform, threshold_absolute=False)
+    utility, mean = mean_center(utility, include_mean_vector=True)
+
+    print "diffusing..."
+
+    # util_diff = diffuse_ignore_missing(diff_uu, utility, orig_copy)
+    # util_diff_n = diffuse_ignore_missing(diff_uu_n, utility, orig_copy)
+
+    util_diff = diff_uu.dot(utility)
+    util_diff_n = diff_uu_n.dot(utility)
+
+    util_diff_complete = util_diff + mean
+    util_diff_complete_n = util_diff_n + mean
+
+    if reverse is True:
+        util_diff = util_diff.T
+        util_diff_n = util_diff_n.T
+        util_diff_complete = util_diff_complete.T
+        util_diff_complete_n = util_diff_complete_n.T
+
+    #keep the original values for the diffused complete matrix
+    util_diff_complete[original_nonzero] = original_util[original_nonzero]
+    util_diff_complete_n[original_nonzero] = original_util[original_nonzero]
+
+    print "saving"
+
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff.mat',mdict={'utility':util_diff})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n.mat',mdict={'utility':util_diff_n})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_complete.mat', mdict={'utility':util_diff_complete})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n_complete', mdict={'utility':util_diff_complete_n})
+
+    return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
+
+
+
+def main_double_diffusion_missing_values(input_file='ml-100k/u.data', sim_func='adjusted_cosine', alpha_nL=1.0, threshold_fraction=0.08,
+                          transform=transformation_linear, output_prefix='', reverse=False, order_dependent=True):
+    
+    if sim_func == 'cosine':
+        similarity_func = create_similarity_cosine
+    elif sim_func == 'adjusted_cosine':
+        similarity_func = create_similarity_adjusted_cosine
+    elif sim_func == 'pearson':
+        similarity_func = create_similarity_pearson_correlation
+
+    # default, diffuse by useruser diffusion then itemitem diffusion
+
+    utility = create_utility_matrix(input_file, defaultNumUsers, defaultNumItems, file_delimiter=',')
+    original_util = utility.copy()
+    original_nonzero = np.nonzero(original_util)
+    orig_copy = original_nonzero.copy()
+
+    if reverse is True:
+        utility = utility.T
+        orig_copy = orig_copy.T
+
+    similarity_uu = similarity_func(utility)
+
+    # print similarity_uu.shape
+    diff_uu,diff_uu_n,_,_ = diffusion(similarity_uu, alpha_nL, threshold_fraction,
+                                                                     transform, threshold_absolute=False)
+    utility, mean = mean_center(utility, include_mean_vector=True)
+
+    util_diff = diffuse_ignore_missing(diff_uu, utility, orig_copy)
+    util_diff_n = diffuse_ignore_missing(diff_uu_n, utility, orig_copy)
+
+    util_diff += mean
+    util_diff_n += mean
+
+    if order_dependent is True:
+        similarity_ii = similarity_func(util_diff.T)
+        similarity_ii_n = similarity_func(util_diff_n.T)
+    else:
+        #use originial similarity matrices
+        if util_diff.shape != original_util.shape:
+            similarity_ii = similarity_func(original_util)
+        else:
+            similarity_ii = similarity_func(original_util.T)
+        similarity_ii_n = similarity_ii.copy()
+
+
+    diff_ii,_,_,_= diffusion(similarity_ii, alpha_nL*10, threshold_fraction, transform, threshold_absolute=False)
+    _,diff_ii_n,_,_ = diffusion(similarity_ii_n, alpha_nL*10, threshold_fraction, transform, threshold_absolute=False)
+
+    util_diff, mean_diff = mean_center(util_diff.T, include_mean_vector=True)
+    util_diff_n, mean_diff_n = mean_center(util_diff_n.T, include_mean_vector=True)
+
+    # diffuse again then change back to previous form
+    util_diff = diff_ii.dot(util_diff)
+    util_diff_n = diff_ii_n.dot(util_diff_n)
+    util_diff_complete_n = (util_diff_n + mean_diff_n)
+    util_diff_complete = (util_diff + mean_diff)
+
+    if reverse is False:
+        util_diff = util_diff.T
+        util_diff_n = util_diff_n.T
+        util_diff_complete = util_diff_complete.T
+        util_diff_complete_n = util_diff_complete_n.T
+
+    #keep the original values for the diffused complete matrix
+    util_diff_complete[original_nonzero] = original_util[original_nonzero]
+    util_diff_complete_n[original_nonzero] = original_util[original_nonzero]
+
+    print "saving"
+
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff.mat',mdict={'utility':util_diff})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n.mat',mdict={'utility':util_diff_n})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_complete.mat', mdict={'utility':util_diff_complete})
+    scipy.io.savemat(matrix_path + output_prefix + 'ml100k_util_diff_n_complete', mdict={'utility':util_diff_complete_n})
+
+    return (util_diff,util_diff_n,util_diff_complete, util_diff_complete_n)
+
+
+def create_similarity_adjusted_cosine_old(utility):
+    # create similarity matrix using the adjusted cosine similarity measure
+    numRows, numColumns = utility.shape
+    similarity = np.zeros((numColumns,numColumns))
+    # mean centre the ratings for each user (leaving 0's unaffected)
+    for u in xrange(numRows):
+        if np.count_nonzero(utility[u,:]) == 0:
+            # don't mean center zero vectors
+            continue
+        zero_indices = np.where(utility[u,:] == 0)[0]
+        utility[u,:] = utility[u,:] - utility[u,:].sum() / float(np.count_nonzero(utility[u,:]))
+        utility[u,:][zero_indices] = 0.0
+
+    print utility
+
+    for i in xrange(numColumns):
+        for j in xrange(i,numColumns):
+            #calculate the cosine correlation between two movies
+            if np.count_nonzero(utility[:,i]) == 0 or np.count_nonzero(utility[:,j]) == 0:
+                continue
+            sim = 1 - cosine(utility[:,i],utility[:,j])
+            similarity[i][j], similarity[j][i] = sim, sim
+
+    return similarity
+
+
 if __name__=='__main__':
 
-    main_similarity()
+    utility = create_utility_matrix('ml-100k/u.data', defaultNumUsers, defaultNumItems, file_delimiter='\t')
+
+    print "creating old"
+    sim = create_similarity_adjusted_cosine_old(utility.copy())
+    print "creating new"
+    sim_new = create_similarity_adjusted_cosine(utility)
 
 
+    #TODO: Problem was vectorised solution centered on user but then calculated useruser similarity and vice verse
+    # refactor
+    pdb.set_trace()
 
 
 
