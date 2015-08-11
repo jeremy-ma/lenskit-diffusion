@@ -2,15 +2,21 @@ package org.grouplens.lenskit.hello;
 
 import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLDouble;
+import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.grouplens.lenskit.core.Transient;
+import org.grouplens.lenskit.cursors.Cursor;
 import org.grouplens.lenskit.data.dao.EventDAO;
+import org.grouplens.lenskit.data.event.Rating;
+import org.grouplens.lenskit.data.pref.Preference;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +32,7 @@ public class DiffusionModelBuilder implements Provider<DiffusionModel> {
     public DiffusionModelBuilder(@Transient EventDAO dao, @MatrixFileName String diffusionFileName) {
         this.dao = dao;
         this.diffusionMatrixFileName = diffusionFileName;
+
     }
 
     @Override
@@ -55,7 +62,9 @@ public class DiffusionModelBuilder implements Provider<DiffusionModel> {
         //read in the precomputed matrix
         //TODO: do all preprocessing in Java, make similarity matrix etc.
         try{
+
             MatFileReader reader = new MatFileReader(precomputedFilePath + String.valueOf(partitionNum) + '_' + this.diffusionMatrixFileName);
+            System.out.println("reading from "+precomputedFilePath + String.valueOf(partitionNum) + '_' + this.diffusionMatrixFileName);
             MLDouble red = (MLDouble) reader.getMLArray("diffusion");
             double [][] diffusion = red.getArray();
             diffMatrix = MatrixUtils.createRealMatrix(diffusion);

@@ -12,7 +12,7 @@ import java.io.Serializable;
  * {@link Shareable} annotation tells LensKit that the model can be reused between different
  * recommenders.
  */
-@DefaultProvider(DiffusionModelBuilder.class)
+@DefaultProvider(UserDiffusionModelBuilder.class)
 public class DiffusionModel {
     private final RealMatrix diffusionMatrix;
 

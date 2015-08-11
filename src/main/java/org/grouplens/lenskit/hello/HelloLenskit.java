@@ -73,9 +73,9 @@ public class HelloLenskit implements Runnable {
 
     private String dataFileName = "ml-100k/u.data";
     private String resultsFileName = "results.csv";
-    private String vectorSimilarityMeasure = "cosine";
+    private String vectorSimilarityMeasure = "pearson";
     private String method = "itemitemCF";
-    private int numNeighbours = 50;
+    private int numNeighbours = 30;
 
     private void set_config_userCF(LenskitConfiguration config){
         config.bind(ItemScorer.class)
@@ -331,6 +331,35 @@ public class HelloLenskit implements Runnable {
         return simpleEval;
     }
 
+    private SimpleEvaluator testEval(int numThreads){
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+
+        set_config_itemCF(config_diff_n);
+        config_diff_n.set(Alpha.class).to(4.0);
+
+        if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
+            config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        } else {
+            config_reg.bind(VectorSimilarity.class).to(PearsonCorrelation.class);
+            config_diff_n.bind(VectorSimilarity.class).to(DiffusedPearsonCorrelation.class);
+        }
+
+        set_config_itemCF(config_reg);
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_reg);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF", config_diff_n);
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+
+        return simpleEval;
+    }
 
 
     public HelloLenskit(String[] args) {
@@ -360,7 +389,7 @@ public class HelloLenskit implements Runnable {
         SimpleEvaluator simpleEval;
 
         //add some double diffusion
-        simpleEval =DoubleDiffUserBasedCFEval(4);
+        simpleEval = testEval(4);
 
         /*
         //add some funk SVD
@@ -370,13 +399,12 @@ public class HelloLenskit implements Runnable {
         simpleEval.addAlgorithm(SVD_algo);
         */
 
-
         File in = new File(dataFileName);
         CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
         builder.setDelimiter("\t");
         CSVDataSource dat = builder.build();
 
-        simpleEval.addDataset(dat,5,0.2);
+        simpleEval.addDataset(dat,5);
         RMSEPredictMetric rmse = new RMSEPredictMetric();
         CoveragePredictMetric cover = new CoveragePredictMetric();
         NDCGPredictMetric ndcg = new NDCGPredictMetric();
