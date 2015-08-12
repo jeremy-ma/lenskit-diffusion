@@ -23,13 +23,13 @@ import java.util.regex.Pattern;
 /**
  * Model builder that computes the global and item biases.
  */
-public class DiffusionModelBuilder implements Provider<DiffusionModel> {
+public class PrecomputedDiffusionModelBuilder implements Provider<DiffusionModel> {
     private final EventDAO dao;
     private final String diffusionMatrixFileName;
     private static final String precomputedFilePath = "precomputed_matrices/";
 
     @Inject
-    public DiffusionModelBuilder(@Transient EventDAO dao, @MatrixFileName String diffusionFileName) {
+    public PrecomputedDiffusionModelBuilder(@Transient EventDAO dao, @MatrixFileName String diffusionFileName) {
         this.dao = dao;
         this.diffusionMatrixFileName = diffusionFileName;
 

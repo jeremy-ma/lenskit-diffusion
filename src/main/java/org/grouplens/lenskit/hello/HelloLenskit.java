@@ -336,7 +336,7 @@ public class HelloLenskit implements Runnable {
         LenskitConfiguration config_reg = new LenskitConfiguration();
 
         set_config_itemCF(config_diff_n);
-        config_diff_n.set(Alpha.class).to(4.0);
+        config_diff_n.set(Alpha_nL.class).to(4.0);
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -387,7 +387,7 @@ public class HelloLenskit implements Runnable {
     public void run() {
 
         SimpleEvaluator simpleEval;
-
+        vectorSimilarityMeasure = "cosine";
         //add some double diffusion
         simpleEval = testEval(4);
 

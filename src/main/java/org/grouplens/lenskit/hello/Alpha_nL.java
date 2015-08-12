@@ -3,7 +3,7 @@ package org.grouplens.lenskit.hello;
 /**
  * Created by jeremyma on 8/07/15.
  */
-//Alpha parameter for
+//Alpha_nL parameter for
 
 import org.grouplens.lenskit.core.Parameter;
 
@@ -19,5 +19,5 @@ import java.lang.annotation.*;
 @Qualifier
 @Target({ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Alpha {
+public @interface Alpha_nL {
 }
