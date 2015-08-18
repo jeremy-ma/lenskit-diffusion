@@ -1,7 +1,7 @@
 package org.grouplens.lenskit.hello;
 
 /**
- * Created by jeremyma on 8/07/15.
+ * Created by jeremyma on 13/08/15.
  */
 
 import org.grouplens.lenskit.core.Parameter;
@@ -9,14 +9,13 @@ import org.grouplens.lenskit.core.Parameter;
 import javax.inject.Qualifier;
 import java.lang.annotation.*;
 
-
 /**
- * value of alpha for the normalised laplacian
+ * fraction of nonzero values to remain in similarity matrix
  */
 @Documented
 @Parameter(Double.class)
 @Qualifier
 @Target({ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Alpha_nL {
+public @interface ThresholdFraction {
 }

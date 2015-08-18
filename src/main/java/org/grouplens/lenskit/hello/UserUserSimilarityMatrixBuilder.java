@@ -8,7 +8,6 @@ import org.grouplens.grapht.annotation.DefaultImplementation;
  */
 
 @DefaultImplementation(CosineUserUserSimilarityMatrixBuilder.class)
-
 public interface UserUserSimilarityMatrixBuilder {
     public RealMatrix build(RealMatrix utility);
 }

@@ -18,9 +18,11 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.vectors.similarity;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 
 import org.grouplens.lenskit.vectors.SparseVector;
+import org.grouplens.lenskit.vectors.similarity.SimilarityDamping;
+import org.grouplens.lenskit.vectors.similarity.VectorSimilarity;
 
 import javax.inject.Inject;
 

@@ -1,4 +1,4 @@
-package org.grouplens.lenskit.hello;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 /*
  * LensKit, an open source recommender systems toolkit.
  * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.

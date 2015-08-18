@@ -1,4 +1,4 @@
-package org.grouplens.lenskit.hello;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -7,6 +7,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.grouplens.lenskit.ItemScorer;
 import org.grouplens.lenskit.basic.AbstractItemScorer;
 import org.grouplens.lenskit.collections.LongKeyDomain;
+import org.grouplens.lenskit.hello.DiffusedUtilityModel;
 import org.grouplens.lenskit.vectors.ImmutableSparseVector;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;

@@ -15,5 +15,5 @@ import java.util.Map;
 public interface UtilityMatrixNormalizer {
 
     //normalize the utility matrix
-    public RealMatrix normalizeUtilityMatrix(RealMatrix utility);
+    public RealMatrix normalize(RealMatrix utility);
 }

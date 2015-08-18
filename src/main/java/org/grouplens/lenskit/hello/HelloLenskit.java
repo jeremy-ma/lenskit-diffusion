@@ -36,6 +36,9 @@ import org.grouplens.lenskit.eval.metrics.predict.MAEPredictMetric;
 import org.grouplens.lenskit.eval.metrics.predict.NDCGPredictMetric;
 import org.grouplens.lenskit.eval.metrics.predict.RMSEPredictMetric;
 import org.grouplens.lenskit.eval.traintest.SimpleEvaluator;
+import org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused.DoubleDiffusionItemScorer;
+import org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused.PrediffusedItemCosineSimilarity;
+import org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused.PrediffusedUserCosineSimilarity;
 import org.grouplens.lenskit.iterative.IterationCount;
 import org.grouplens.lenskit.iterative.RegularizationTerm;
 import org.grouplens.lenskit.knn.NeighborhoodSize;
@@ -73,7 +76,7 @@ public class HelloLenskit implements Runnable {
 
     private String dataFileName = "ml-100k/u.data";
     private String resultsFileName = "results.csv";
-    private String vectorSimilarityMeasure = "pearson";
+    private String vectorSimilarityMeasure = "cosine";
     private String method = "itemitemCF";
     private int numNeighbours = 30;
 
@@ -228,7 +231,6 @@ public class HelloLenskit implements Runnable {
         return simpleEval;
     }
 
-
     private SimpleEvaluator DoubleDiffItemBasedCFEval(int numThreads){
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
@@ -331,12 +333,14 @@ public class HelloLenskit implements Runnable {
         return simpleEval;
     }
 
-    private SimpleEvaluator testEval(int numThreads){
+    private SimpleEvaluator testEval(int numThreads, double alpha, double thresholdFraction){
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
 
         set_config_itemCF(config_diff_n);
-        config_diff_n.set(Alpha_nL.class).to(4.0);
+        config_diff_n.set(Alpha_nL.class).to(alpha);
+        config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -350,6 +354,8 @@ public class HelloLenskit implements Runnable {
 
         AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF", config_reg);
         AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF", config_diff_n);
+
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(UserUtilityMatrixNormalizer.class);
 
         //set to run with n threads
         Properties EvalProps = new Properties();
@@ -386,42 +392,42 @@ public class HelloLenskit implements Runnable {
 
     public void run() {
 
-        SimpleEvaluator simpleEval;
-        vectorSimilarityMeasure = "cosine";
-        //add some double diffusion
-        simpleEval = testEval(4);
 
-        /*
-        //add some funk SVD
-        LenskitConfiguration config_SVD = new LenskitConfiguration();
-        set_config_FunkSVD(config_SVD);
-        AlgorithmInstance SVD_algo = new AlgorithmInstance("FunkSVD", config_SVD);
-        simpleEval.addAlgorithm(SVD_algo);
-        */
+        double alphas [] = {0.5, 1.0,2.0,3.0,4.0,5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+        double threshold_fractions [] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
 
-        File in = new File(dataFileName);
-        CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
-        builder.setDelimiter("\t");
-        CSVDataSource dat = builder.build();
+        for (double alpha:alphas){
+            for (double threshold_frac:threshold_fractions){
+                SimpleEvaluator simpleEval;
+                vectorSimilarityMeasure = "cosine";
+                //add some double diffusion
+                simpleEval = testEval(4,alpha,threshold_frac);
+                File in = new File(dataFileName);
+                CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
+                builder.setDelimiter("\t");
+                CSVDataSource dat = builder.build();
 
-        simpleEval.addDataset(dat,5);
-        RMSEPredictMetric rmse = new RMSEPredictMetric();
-        CoveragePredictMetric cover = new CoveragePredictMetric();
-        NDCGPredictMetric ndcg = new NDCGPredictMetric();
-        MAEPredictMetric mae = new MAEPredictMetric();
+                simpleEval.addDataset(dat,5);
+                RMSEPredictMetric rmse = new RMSEPredictMetric();
+                CoveragePredictMetric cover = new CoveragePredictMetric();
+                NDCGPredictMetric ndcg = new NDCGPredictMetric();
+                MAEPredictMetric mae = new MAEPredictMetric();
 
-        simpleEval.addMetric(rmse);
-        simpleEval.addMetric(cover);
-        simpleEval.addMetric(ndcg);
-        simpleEval.addMetric(mae);
+                simpleEval.addMetric(rmse);
+                simpleEval.addMetric(cover);
+                simpleEval.addMetric(ndcg);
+                simpleEval.addMetric(mae);
 
-        File out = new File(resultsFileName);
-        simpleEval.setOutput(out);
+                File out = new File("directed_" + "vectorsim_" + vectorSimilarityMeasure + "_threshold_" + Double.toString(threshold_frac) +
+                                    "_alpha_" + Double.toString(alpha)+".csv");
+                simpleEval.setOutput(out);
 
-        try{
-            simpleEval.call();
-        } catch (Exception e){
-            System.out.println(e.getMessage());
+                try{
+                    simpleEval.call();
+                } catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
+            }
         }
 
     }

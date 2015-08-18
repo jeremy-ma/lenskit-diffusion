@@ -1,5 +1,6 @@
 package org.grouplens.lenskit.hello;
 
+import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLDouble;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -21,7 +22,8 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
     private RealMatrix diffMatrix=null;
 
     @Inject
-    public ItemCFDiffusionModelBuilder(@Transient EventDAO dao, @Alpha_nL double alpha_nl, UtilityMatrixNormalizer normalizer,
+    public ItemCFDiffusionModelBuilder(@Transient EventDAO dao, @Alpha_nL double alpha_nl,
+                                       @ThresholdFraction double thresholdFraction, UtilityMatrixNormalizer normalizer,
                                        UserUserSimilarityMatrixBuilder similarityBuilder, LaplacianMatrixBuilder laplacianBuilder) {
 
         final HashMap<Long, HashMap<Long,Double>> ratingStore = new HashMap<Long, HashMap<Long,Double>>();
@@ -51,12 +53,14 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
             ratings.close();
         }
 
-        System.out.println("Creating Utility Matrix\n");
         utility = this.createUtilityMatrix((int)maxUserId, (int) maxItemId, ratingStore);
-        System.out.println("Utility matrix created\n");
+        System.out.println("Utility matrix created");
         //create a user-user similarity matrix (adjusted cosine)
         similarity = similarityBuilder.build(utility);
-        System.out.println("Similarity Matrix create\n");
+        System.out.println("Similarity Matrix created");
+        similarity = VectorUtils.thresholdSimilarityMatrix(similarity,thresholdFraction);
+        saveToFile(similarity, "afterThreshold.mat");
+
         //create a diffusion matrix (premultiplied by appropriate alpha)
         RealMatrix L = laplacianBuilder.build(similarity, alpha_nl);
         diffMatrix = MatrixUtils.createRealIdentityMatrix((int) maxUserId);
@@ -91,6 +95,22 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
 
         return utility;
 
+    }
+
+    /**
+     * Debug function
+     * @return void
+     */
+    private void saveToFile(RealMatrix m, String filename){
+        MLDouble MLutility = new MLDouble("utility", m.getData());
+        ArrayList<MLArray> collection = new ArrayList<MLArray>();
+        collection.add(MLutility);
+        try{
+            MatFileWriter writer = new MatFileWriter();
+            writer.write(filename, collection);
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override

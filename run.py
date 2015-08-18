@@ -197,6 +197,81 @@ def analyse_csv(regular_algo_suffix='_itemitemCF'):
                     #print '#############################'
 
 
+
+def analyse_csv_java(regular_algo_suffix='_itemitemCF', vector_similarity_funcs=['cosine'], thresholds = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9], 
+                     alphas=[0.5, 1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0]):
+    # analyse the csv files
+    printer = pprint.PrettyPrinter(indent=4)
+
+    for vectorfunc in vector_similarity_funcs:
+
+        for threshold in thresholds:
+            aggregateFileName = vectorfunc + '_vectorsim_' + 'threshold_' + str(threshold) + '_aggregate.csv'
+            aggregateFile = open(aggregateFileName, 'wb')
+            writer = csv.writer(aggregateFile)
+            first = True
+
+            for alpha_nL in alphas:
+                resultFileName = "directed_"  + "vectorsim_" + vectorfunc + "_" + "threshold_" + str(threshold) + "_alpha_" + str(alpha_nL) + ".csv"
+                with open(resultFileName) as fi:
+                    reader = csv.reader(fi)
+                    result_matrix = []
+
+                    for rownum, row in enumerate(reader):
+                        if rownum == 0:
+                            header = row
+                        else:
+                            result_matrix.append(row)
+                    
+                stats_by_diffusion_type = defaultdict(lambda: defaultdict(float))
+
+                # collate stats from the results
+                num_partitions = 0
+                for row in result_matrix:
+                    algorithmName = row[header.index('Algorithm')]
+                    for metric in metrics:
+                        #print row[header.index(metric)]
+                        value = float(row[header.index(metric)])
+                        stats_by_diffusion_type[algorithmName][metric] += value
+                    stats_by_diffusion_type[algorithmName]['num_partitions'] += 1.0
+
+                regular_algo_name = 'regular_' + vectorfunc + '_similarity' + regular_algo_suffix
+
+                # average the stats
+                for algorithmName, algorithmStats in stats_by_diffusion_type.iteritems():
+                    for metric in metrics:
+                        # print algorithmName, metric, algorithmStats[metric]
+                        algorithmStats[metric] = algorithmStats[metric] / float(algorithmStats['num_partitions'])
+                    assert(algorithmStats['num_partitions'] == 5.0)
+
+                # print resultFileName
+                # print "************ similarity_matrix: {0}  alpha_nL: {1} *************".format(matrixfunc, alpha_nL)
+                # calculate the % error reduction
+
+                # write the header
+                if first is True:
+                    print ['alpha_nL'] + list(chain.from_iterable(( algorithmName +'_'+ metric + '_improvement', algorithmName +'_'+ metric+'_average') \
+                                    for algorithmName in sorted(stats_by_diffusion_type.keys()) for metric in metrics ))
+
+                    writer.writerow(['alpha_nL'] + list(chain.from_iterable(( algorithmName +'_'+ metric + '_improvement', algorithmName +'_'+ metric+'_average') \
+                                    for algorithmName in sorted(stats_by_diffusion_type.keys()) for metric in metrics )))
+                    first = False
+
+                row = [str(alpha_nL)]
+
+                for algorithmName, algorithmStats in sorted(stats_by_diffusion_type.iteritems(), key = lambda x : x[0]):
+                    # print algorithmName
+                    for metric in metrics:
+                        reg_error = stats_by_diffusion_type[regular_algo_name][metric]
+                        error_reduction = (1.0 - algorithmStats[metric] / reg_error) * 100.0
+                        algorithmStats[metric + '_error_reduction'] = error_reduction
+
+                        row.append(str(error_reduction))
+                        row.append(str(algorithmStats[metric]))
+
+
+                writer.writerow(row)
+
 if __name__ == '__main__':
 
     # create_similarity_matrices(source='ml10M_reduced/ml1M_ml100k.dat',numUsers=6040, numItems=1682)
@@ -228,9 +303,9 @@ if __name__ == '__main__':
 
     """
     
-    run_test_set_partitions_doublediffusedutility()
+    #run_test_set_partitions_doublediffusedutility()
     #run_test_set_partitions(threshold_fraction=0.06, CF='item')
-    analyse_csv('_itemitemCF')
+    analyse_csv_java('_itemitemCF')
 
 
     # diffuse_utility(5, 1.0, 0.08, 'adjusted_cosine')

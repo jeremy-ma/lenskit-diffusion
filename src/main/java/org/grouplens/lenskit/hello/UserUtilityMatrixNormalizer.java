@@ -2,22 +2,15 @@ package org.grouplens.lenskit.hello;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.grouplens.lenskit.vectors.similarity.SimilarityDamping;
-
-import javax.inject.Inject;
-import java.util.Map;
-import java.util.Vector;
 
 /**
- * Created by jeremyma on 11/08/15.
+ * Created by jeremyma on 13/08/15.
  */
-public class ItemUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
+public class UserUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
 
-
-    //Create utility matrix, normalize by item mean
-    public ItemUtilityMatrixNormalizer(){
-    }
-
+    /*
+    normalize utility matrix by user mean
+     */
     @Override
     public RealMatrix normalize(RealMatrix utility) {
         System.out.println("mean centering utility matrix");
@@ -35,23 +28,19 @@ public class ItemUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
 
         double globalMean = total / totalNumNonZero;
 
-        //mean center the utility matrix (by Item)
-        for (int i=0; i<numItems; i++){
-            RealVector itemvector = utility.getColumnVector(i);
-            double mean = itemvector.getL1Norm() / (double) VectorUtils.countNonZero(itemvector);
-            for (int j=0; j<numUsers; j++){
-                double entry = itemvector.getEntry(j);
+        //mean center the utility matrix (by user)
+        for (int i=0; i<numUsers; i++){
+            RealVector uvector = utility.getRowVector(i);
+            double mean = uvector.getL1Norm() / (double) VectorUtils.countNonZero(uvector);
+            for (int j=0; j<numItems; j++){
+                double entry = uvector.getEntry(j);
                 if (entry > 0.0){
-                    itemvector.setEntry(j,entry-mean-globalMean);
+                    uvector.setEntry(j, entry - mean - globalMean);
                 }
             }
-            utility.setColumnVector(i, itemvector);
+            utility.setRowVector(i, uvector);
         }
 
         return utility;
     }
 }
-
-
-
-

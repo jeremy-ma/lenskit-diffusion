@@ -1,4 +1,4 @@
-package org.grouplens.lenskit.hello;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 
 import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLDouble;
@@ -11,6 +11,8 @@ import org.grouplens.lenskit.cursors.Cursor;
 import org.grouplens.lenskit.data.dao.EventDAO;
 import org.grouplens.lenskit.data.event.Rating;
 import org.grouplens.lenskit.data.pref.Preference;
+import org.grouplens.lenskit.hello.DiffusionModel;
+import org.grouplens.lenskit.hello.MatrixFileName;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

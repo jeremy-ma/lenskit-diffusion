@@ -19,13 +19,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.grouplens.lenskit.hello;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 
 import org.grouplens.lenskit.basic.AbstractItemScorer;
 import org.grouplens.lenskit.data.dao.UserEventDAO;
 import org.grouplens.lenskit.data.event.Rating;
 import org.grouplens.lenskit.data.event.Ratings;
 import org.grouplens.lenskit.data.history.UserHistory;
+import org.grouplens.lenskit.hello.BiasModel;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 
 import javax.annotation.Nonnull;

@@ -1,8 +1,9 @@
-package org.grouplens.lenskit.hello;
+package org.grouplens.lenskit.hello.org.grouplens.lenskit.hello.unused;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.grouplens.lenskit.core.Shareable;
+import org.grouplens.lenskit.hello.DiffusedUtilityModel;
 import org.grouplens.lenskit.knn.item.ItemSimilarity;
 import org.grouplens.lenskit.knn.user.UserSimilarity;
 import org.grouplens.lenskit.vectors.SparseVector;
