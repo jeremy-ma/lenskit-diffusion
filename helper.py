@@ -163,6 +163,8 @@ def diffusion(simmat, alpha_nL=1.0, threshold_fraction=0.3, transform=transforma
     # calculate diffusion rates
     ratio_diagL_diagNL = L.diagonal().sum() / L_n.diagonal().sum()
     alpha_L = alpha_nL / ratio_diagL_diagNL
+
+    pdb.set_trace()
     #ratio_diagabsL_diagNL = L_abs.diagonal().sum() / L_n.diagonal().sum()
     #alpha_absL = alpha_nL / ratio_diagabsL_diagNL
 

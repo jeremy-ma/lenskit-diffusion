@@ -17,7 +17,11 @@ public class NormalizedLaplacianMatrixBuilder implements LaplacianMatrixBuilder 
             v.mapMultiplyToSelf(-1.0);
             v.addToEntry(i, degree);
             //normalize
-            v.mapDivideToSelf(degree);
+            if (degree > 0.0){
+                v.mapDivideToSelf(degree);
+            } else {
+                v.setEntry(i,1.0);
+            }
             laplacian.setRowVector(i,v);
         }
         return laplacian.scalarMultiply(alpha);

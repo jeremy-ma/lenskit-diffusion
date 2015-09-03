@@ -340,7 +340,7 @@ public class HelloLenskit implements Runnable {
         set_config_itemCF(config_diff_n);
         config_diff_n.set(Alpha_nL.class).to(alpha);
         config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
-        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(DirectedCosineUserUserSimilarityMatrixBuilder.class);
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -393,8 +393,8 @@ public class HelloLenskit implements Runnable {
     public void run() {
 
 
-        double alphas [] = {0.5, 1.0,2.0,3.0,4.0,5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-        double threshold_fractions [] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+        double alphas [] = {0.5, 1.0,2.0};
+        double threshold_fractions [] = {0.1, 0.2, 0.3};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){

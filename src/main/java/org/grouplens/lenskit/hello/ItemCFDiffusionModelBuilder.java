@@ -66,6 +66,8 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
         diffMatrix = MatrixUtils.createRealIdentityMatrix((int) maxUserId);
         diffMatrix = diffMatrix.add(L);
         diffMatrix = MatrixUtils.inverse(diffMatrix);
+        saveToFile(diffMatrix,"matt.mat");
+
 
     }
 
