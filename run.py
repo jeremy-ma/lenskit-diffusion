@@ -212,7 +212,7 @@ def analyse_csv_java(regular_algo_suffix='_itemitemCF', vector_similarity_funcs=
             first = True
 
             for alpha_nL in alphas:
-                resultFileName = "directed_"  + "vectorsim_" + vectorfunc + "_" + "threshold_" + str(threshold) + "_alpha_" + str(alpha_nL) + ".csv"
+                resultFileName = "undircosine_"  + "vectorsim_" + vectorfunc + "_" + "threshold_" + str(threshold) + "_alpha_" + str(alpha_nL) + ".csv"
                 with open(resultFileName) as fi:
                     reader = csv.reader(fi)
                     result_matrix = []

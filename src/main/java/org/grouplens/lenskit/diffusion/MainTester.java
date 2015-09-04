@@ -71,6 +71,7 @@ import java.util.Properties;
 public class MainTester implements Runnable {
     public static void main(String[] args) {
         MainTester hello = new MainTester(args);
+        System.out.println("Hellooo");
         try {
             hello.run();
         } catch (RuntimeException e) {
@@ -83,7 +84,6 @@ public class MainTester implements Runnable {
     private String dataFileName = "ml-100k/u.data";
     private String resultsFileName = "results.csv";
     private String vectorSimilarityMeasure = "cosine";
-    private String method = "itemitemCF";
     private int numNeighbours = 30;
 
     private void set_config_userCF(LenskitConfiguration config){
@@ -342,25 +342,39 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
+    private SimpleEvaluator SVDEval(int numThreads){
+        LenskitConfiguration config_svd = new LenskitConfiguration();
+        set_config_FunkSVD(config_svd);
+        AlgorithmInstance svd_alg = new AlgorithmInstance("SVD_iteration150_meandamping5_featurecount30",config_svd);
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(svd_alg);
+        return simpleEval;
+    }
 
     private SimpleEvaluator testEval(int numThreads, double alpha, double thresholdFraction){
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
-        LenskitConfiguration config_svd = new LenskitConfiguration();
 
         set_config_itemCF(config_diff_n);
         set_config_itemCF(config_diff);
         set_config_itemCF(config_reg);
-        set_config_FunkSVD(config_svd);
 
+        //set normalized settings
         config_diff_n.set(Alpha_nL.class).to(alpha);
         config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
         config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(ItemUserUtilityMatrixNormalizer.class);
+
+        //set non-normalized settings
         config_diff.set(Alpha_nL.class).to(alpha);
         config_diff.set(ThresholdFraction.class).to(thresholdFraction);
         config_diff.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(ItemUserUtilityMatrixNormalizer.class);
         config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
+
 
         if (vectorSimilarityMeasure.equalsIgnoreCase("cosine")){
             config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -380,7 +394,6 @@ public class MainTester implements Runnable {
         AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarityitemitemCF",
                 config_diff);
 
-        config_diff_n.bind(UtilityMatrixNormalizer.class).to(UserUtilityMatrixNormalizer.class);
 
         //set to run with n threads
         Properties EvalProps = new Properties();
@@ -395,43 +408,70 @@ public class MainTester implements Runnable {
 
 
     public MainTester(String[] args) {
-        if (args.length >= 5) {
-            System.out.println("Running test with custom settings");
-            dataFileName = args[0];
-            resultsFileName = args[1];
-            vectorSimilarityMeasure = args[2];
-            //set num neighbours
-            numNeighbours = Integer.parseInt(args[3]);
-            method = args[4];
-            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
-                    " vector_similarity: " + vectorSimilarityMeasure + "num_neighbours: " + Integer.toString(numNeighbours) +
-                    "method: " + method + "\n");
-
-        } else {
-            System.out.println("Running test with default settings");
-            System.out.println("data: " + dataFileName + ", results: " + resultsFileName +
-                    " vector_similarity: " + vectorSimilarityMeasure + "\n");
-        }
+        System.out.println("hello");
 
     }
 
+    public void runsingle(){
+        SimpleEvaluator simpleEval;
+        System.out.println("SVD!!!");
+        //create evaluator object
+        simpleEval = SVDEval(4);
+
+        //construct data source
+        File in = new File(dataFileName);
+        CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
+        builder.setDelimiter("\t");
+        CSVDataSource dat = builder.build();
+
+        //use 5-fold CV
+        simpleEval.addDataset(dat,5);
+
+        //Add metrics
+        RMSEPredictMetric rmse = new RMSEPredictMetric();
+        CoveragePredictMetric cover = new CoveragePredictMetric();
+        NDCGPredictMetric ndcg = new NDCGPredictMetric();
+        MAEPredictMetric mae = new MAEPredictMetric();
+
+        simpleEval.addMetric(rmse);
+        simpleEval.addMetric(cover);
+        simpleEval.addMetric(ndcg);
+        simpleEval.addMetric(mae);
+
+        File out = new File("SVD_results.csv");
+        simpleEval.setOutput(out);
+
+        try{
+            simpleEval.call();
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
 
     public void run() {
+        System.out.println("Hi");
+
+        /*
         double alphas [] = {0.5, 1.0,2.0};
         double threshold_fractions [] = {0.1, 0.2, 0.3};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){
                 SimpleEvaluator simpleEval;
-                vectorSimilarityMeasure = "cosine";
-                //add some double diffusion
+
+                //create evaluator object
                 simpleEval = testEval(4,alpha,threshold_frac);
+
+                //construct data source
                 File in = new File(dataFileName);
                 CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
                 builder.setDelimiter("\t");
                 CSVDataSource dat = builder.build();
 
+                //use 5-fold CV
                 simpleEval.addDataset(dat,5);
+
+                //Add metrics
                 RMSEPredictMetric rmse = new RMSEPredictMetric();
                 CoveragePredictMetric cover = new CoveragePredictMetric();
                 NDCGPredictMetric ndcg = new NDCGPredictMetric();
@@ -453,6 +493,6 @@ public class MainTester implements Runnable {
                 }
             }
         }
-
+    */
     }
 }
