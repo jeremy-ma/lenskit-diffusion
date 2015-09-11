@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.grouplens.lenskit:lenskit-predict:2.2-M3">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-predict/2.2-M3/3b351092c4fc9baf4aae72f10f8a2120eceeafbb/lenskit-predict-2.2-M3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-predict/2.2-M3/34e5ccd2f9b2406d36ef4e6351d3a82844f6941f/lenskit-predict-2.2-M3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

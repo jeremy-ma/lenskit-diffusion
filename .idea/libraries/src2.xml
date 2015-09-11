@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="src2">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../JMatIO-041212/src" />
+      <root url="file://$PROJECT_DIR$/../../JMatIO-041212/test" />
+    </SOURCES>
+  </library>
+</component>

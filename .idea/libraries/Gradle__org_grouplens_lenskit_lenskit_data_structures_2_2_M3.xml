@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.grouplens.lenskit:lenskit-data-structures:2.2-M3">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-data-structures/2.2-M3/be05df5277e15b8d3fbe4988bf837fcc65f124ee/lenskit-data-structures-2.2-M3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-data-structures/2.2-M3/11ecd9e0efaa6bf1f05f267042390fe9d582d3cd/lenskit-data-structures-2.2-M3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

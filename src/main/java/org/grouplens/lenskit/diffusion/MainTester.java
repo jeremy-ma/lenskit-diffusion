@@ -25,11 +25,10 @@ import org.grouplens.lenskit.ItemScorer;
 import org.grouplens.lenskit.baseline.*;
 import org.grouplens.lenskit.core.LenskitConfiguration;
 import org.grouplens.lenskit.diffusion.ItemCF.CosineUserUserSimilarityMatrixBuilder;
-import org.grouplens.lenskit.diffusion.ItemCF.DirectedCosineUserUserSimilarityMatrixBuilder;
 import org.grouplens.lenskit.diffusion.ItemCF.UserUserSimilarityMatrixBuilder;
 import org.grouplens.lenskit.diffusion.general.*;
 import org.grouplens.lenskit.diffusion.vectorsimilarity.DiffusedCosineVectorSimilarity;
-import org.grouplens.lenskit.diffusion.vectorsimilarity.DiffusedDistanceVectorSimilarity;
+import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.DiffusedDistanceVectorSimilarity;
 import org.grouplens.lenskit.diffusion.vectorsimilarity.DiffusedPearsonCorrelation;
 import org.grouplens.lenskit.eval.EvalConfig;
 import org.grouplens.lenskit.eval.algorithm.AlgorithmInstance;
@@ -44,7 +43,6 @@ import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.Do
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.PrediffusedItemCosineSimilarity;
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.PrediffusedUserCosineSimilarity;
 import org.grouplens.lenskit.iterative.IterationCount;
-import org.grouplens.lenskit.iterative.RegularizationTerm;
 import org.grouplens.lenskit.knn.NeighborhoodSize;
 import org.grouplens.lenskit.knn.item.ItemItemScorer;
 import org.grouplens.lenskit.knn.item.ItemSimilarity;
@@ -56,7 +54,6 @@ import org.grouplens.lenskit.mf.funksvd.FeatureCount;
 import org.grouplens.lenskit.mf.funksvd.FunkSVDItemScorer;
 import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
-import org.grouplens.lenskit.transform.threshold.Threshold;
 import org.grouplens.lenskit.vectors.similarity.*;
 
 import java.io.File;
@@ -450,10 +447,8 @@ public class MainTester implements Runnable {
 
     public void run() {
         System.out.println("Hi");
-
-        /*
-        double alphas [] = {0.5, 1.0,2.0};
-        double threshold_fractions [] = {0.1, 0.2, 0.3};
+        double alphas [] = {0.5, 1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0};
+        double threshold_fractions [] = {0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){
@@ -493,6 +488,5 @@ public class MainTester implements Runnable {
                 }
             }
         }
-    */
     }
 }

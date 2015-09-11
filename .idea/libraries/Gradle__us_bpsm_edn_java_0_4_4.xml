@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: us.bpsm:edn-java:0.4.4">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/us.bpsm/edn-java/0.4.4/3a076e4dab444a4f12350c55690a86c3f5684cc3/edn-java-0.4.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/us.bpsm/edn-java/0.4.4/9e852d91bc0163cea9bd99ea4f4397cbc8f943c0/edn-java-0.4.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

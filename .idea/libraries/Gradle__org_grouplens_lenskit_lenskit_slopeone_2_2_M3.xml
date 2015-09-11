@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.grouplens.lenskit:lenskit-slopeone:2.2-M3">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-slopeone/2.2-M3/ad7eb8f58d5dd33aeaa0b3d5c3b0b54c2e03b83/lenskit-slopeone-2.2-M3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.grouplens.lenskit/lenskit-slopeone/2.2-M3/70bd77514dfb61593a3efb43292b630703a249ea/lenskit-slopeone-2.2-M3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

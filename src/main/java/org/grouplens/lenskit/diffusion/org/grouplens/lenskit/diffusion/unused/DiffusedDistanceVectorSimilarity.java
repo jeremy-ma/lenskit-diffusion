@@ -1,4 +1,4 @@
-package org.grouplens.lenskit.diffusion.vectorsimilarity;
+package org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused;
 
 import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLDouble;
