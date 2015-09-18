@@ -1,4 +1,4 @@
-package org.grouplens.lenskit.diffusion.ItemCF;
+package org.grouplens.lenskit.diffusion.UserCF;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -6,6 +6,7 @@ import org.grouplens.lenskit.core.Transient;
 import org.grouplens.lenskit.cursors.Cursor;
 import org.grouplens.lenskit.data.dao.EventDAO;
 import org.grouplens.lenskit.data.event.Rating;
+import org.grouplens.lenskit.diffusion.UserCF.ItemItemSimilarityMatrixBuilder;
 import org.grouplens.lenskit.diffusion.general.*;
 
 import javax.inject.Inject;
@@ -15,13 +16,13 @@ import java.util.HashMap;
 /**
  * Model builder that computes the global and item biases.
  */
-public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
+public class UserCFDiffusionModel implements DiffusionModel {
     private RealMatrix diffMatrix=null;
 
     @Inject
-    public ItemCFDiffusionModelBuilder(@Transient EventDAO dao, @Alpha_nL double alpha_nl,
-                                       @ThresholdFraction double thresholdFraction, UtilityMatrixNormalizer normalizer,
-                                       UserUserSimilarityMatrixBuilder similarityBuilder, LaplacianMatrixBuilder laplacianBuilder) {
+    public UserCFDiffusionModel(@Transient EventDAO dao, @Alpha_nL double alpha_nl,
+                                @ThresholdFraction double thresholdFraction, UtilityMatrixNormalizer normalizer,
+                                ItemItemSimilarityMatrixBuilder similarityBuilder, LaplacianMatrixBuilder laplacianBuilder) {
 
         final HashMap<Long, HashMap<Long,Double>> ratingStore = new HashMap<Long, HashMap<Long,Double>>();
         long maxUserId = 943;
@@ -31,13 +32,6 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
         //fill the utility matrix
         Cursor<Rating> ratings = dao.streamEvents(Rating.class);
         try {
-            /* We loop over all ratings.  The 'fast()' improves performance for the common case,
-             * when we will only work with the rating object inside the loop body.
-             *
-             * If the data set may have multiple ratings for the same (user,item) pair, this code
-             * will be not quite correct.
-             */
-
             for (Rating r: ratings.fast()) {
                 //System.out.print("   ");
                 if (!ratingStore.containsKey(r.getUserId())){
@@ -46,13 +40,13 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
                 ratingStore.get(r.getUserId()).put(r.getItemId(),r.getValue());
             }
         } finally {
-            // cursors must be closed
             ratings.close();
         }
 
         utility = VectorUtils.createUtilityMatrix((int) maxUserId, (int) maxItemId, ratingStore);
-        System.out.println("Utility matrix created");
+        System.out.println("Utility matrix created... normalizing");
         //create a user-user similarity matrix (adjusted cosine)
+        utility = normalizer.normalize(utility);
         similarity = similarityBuilder.build(utility);
         System.out.println("Similarity Matrix created");
         similarity = VectorUtils.thresholdSimilarityMatrix(similarity, thresholdFraction);
@@ -60,17 +54,22 @@ public class ItemCFDiffusionModelBuilder implements Provider<DiffusionModel> {
 
         //create a diffusion matrix (premultiplied by appropriate alpha)
         RealMatrix L = laplacianBuilder.build(similarity, alpha_nl);
-        diffMatrix = MatrixUtils.createRealIdentityMatrix((int) maxUserId);
+        diffMatrix = MatrixUtils.createRealIdentityMatrix((int) maxItemId);
         diffMatrix = diffMatrix.add(L);
         diffMatrix = MatrixUtils.inverse(diffMatrix);
-        VectorUtils.saveToFile(diffMatrix, "matt.mat");
 
+
+        //VectorUtils.saveToFile(diffMatrix, "matt.mat");
 
     }
 
-
+    /**
+     * Get the diffusion matrix.
+     *
+     * @return The Diffusion Matrix.
+     */
     @Override
-    public DiffusionModel get(){
-        return new DiffusionModel(diffMatrix);
+    public RealMatrix getDiffusionMatrix() {
+        return diffMatrix;
     }
 }

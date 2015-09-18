@@ -34,7 +34,6 @@ public class DiffusedCosineVectorSimilarity implements VectorSimilarity {
         ArrayRealVector w_diff;
 
         if (( v_diff = this.cache.get(vec1) ) == null){
-
             v_diff = this.getDiffused(vec1);
             this.cache.put(vec1,v_diff);
         }

@@ -19,21 +19,21 @@ public class DirectedItemItemSimilarityMatrixBuilder implements ItemItemSimilari
     public RealMatrix build(RealMatrix utility) {
         System.out.println("Making Directed similarity");
 
-        HashMap<Integer, HashSet<Integer>> user_to_movies_watched = new HashMap<Integer, HashSet<Integer>>();
+        HashMap<Integer, HashSet<Integer>> items_to_users_watched = new HashMap<Integer, HashSet<Integer>>();
 
         int numUsers = utility.getRowDimension();
         int numItems = utility.getColumnDimension();
 
-        RealMatrix similarity = MatrixUtils.createRealMatrix(numUsers, numUsers);
+        RealMatrix similarity = MatrixUtils.createRealMatrix(numItems, numItems);
 
-        //populate the user sets
-        for (int i =0; i<numUsers;i++){
-            if (! user_to_movies_watched.containsKey(i) ){
-                user_to_movies_watched.put(i,new HashSet<Integer>());
+        //populate the item sets
+        for (int i =0; i<numItems;i++){
+            if (! items_to_users_watched.containsKey(i) ){
+                items_to_users_watched.put(i, new HashSet<Integer>());
             }
-            for (int j=0; j<numItems;j++){
-                if (utility.getEntry(i,j) > 0.0){
-                    user_to_movies_watched.get(i).add(j);
+            for (int j=0; j<numUsers;j++){
+                if (utility.getEntry(j,i) > 0.0){
+                    items_to_users_watched.get(i).add(j);
                 }
             }
         }
@@ -41,10 +41,10 @@ public class DirectedItemItemSimilarityMatrixBuilder implements ItemItemSimilari
         // A(i,j) = (i and j) / i
         // number of movies watched by both i and j / number of movies watched by j
 
-        for (int i=0; i<numUsers; i++){
-            for (int j=0; j<numUsers; j++){
-                HashSet<Integer> ui = new HashSet<Integer>(user_to_movies_watched.get(i));
-                HashSet<Integer> uj = new HashSet<Integer>(user_to_movies_watched.get(j));
+        for (int i=0; i<numItems; i++){
+            for (int j=0; j<numItems; j++){
+                HashSet<Integer> ui = new HashSet<Integer>(items_to_users_watched.get(i));
+                HashSet<Integer> uj = new HashSet<Integer>(items_to_users_watched.get(j));
                 uj.retainAll(ui); //calculate intersection
                 double value = (double) uj.size() / (double) ui.size();
                 similarity.setEntry(i,j,value);

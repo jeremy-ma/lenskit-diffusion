@@ -22,7 +22,6 @@ public class ItemUserUtilityMatrixNormalizer implements UtilityMatrixNormalizer 
         //calculate global mean
         double totalNumNonZero=0;
         double total=0;
-
         for (int i=0; i<numUsers;i++){
             RealVector uvector = utility.getRowVector(i);
             totalNumNonZero += (double) VectorUtils.countNonZero(uvector);
@@ -35,7 +34,7 @@ public class ItemUserUtilityMatrixNormalizer implements UtilityMatrixNormalizer 
         for (int i=0; i<numItems; i++){
             RealVector itemvector = utility.getColumnVector(i);
             double mean = itemvector.getL1Norm() / (double) VectorUtils.countNonZero(itemvector);
-            itemMeans.set(i,mean);
+            itemMeans.add(i,mean-globalMean);
 
         }
 
@@ -43,13 +42,14 @@ public class ItemUserUtilityMatrixNormalizer implements UtilityMatrixNormalizer 
         for (int i=0; i<numUsers; i++){
             RealVector uservector = utility.getRowVector(i);
             double mean = uservector.getL1Norm() / (double) VectorUtils.countNonZero(uservector);
-            userMeans.set(i,mean);
+            userMeans.add(i,mean-globalMean);
         }
 
         //TODO: do this with the efficient matrix visitor thing, OK for now
-        for (int i=0; i<numItems; i++){
-            for (int j=0; j<numUsers; j++){
-                utility.setEntry(i,j,utility.getEntry(i,j) - globalMean - itemMeans.get(i) - userMeans.get(j));
+        //subtract the baseline predictor
+        for (int i=0; i<numUsers; i++){
+            for (int j=0; j<numItems; j++){
+                utility.setEntry(i,j,utility.getEntry(i,j) - globalMean - itemMeans.get(j) - userMeans.get(i));
             }
         }
 

@@ -15,13 +15,13 @@ import java.util.HashMap;
 /**
  * Model builder that computes the global and item biases.
  */
-public class UserCFDiffusionModelBuilder implements Provider<DiffusionModel> {
+public class ItemCFDiffusionModel implements DiffusionModel {
     private RealMatrix diffMatrix=null;
 
     @Inject
-    public UserCFDiffusionModelBuilder(@Transient EventDAO dao, @Alpha_nL double alpha_nl,
-                                       @ThresholdFraction double thresholdFraction, UtilityMatrixNormalizer normalizer,
-                                       UserUserSimilarityMatrixBuilder similarityBuilder, LaplacianMatrixBuilder laplacianBuilder) {
+    public ItemCFDiffusionModel(@Transient EventDAO dao, @Alpha_nL double alpha_nl,
+                                @ThresholdFraction double thresholdFraction, UtilityMatrixNormalizer normalizer,
+                                UserUserSimilarityMatrixBuilder similarityBuilder, LaplacianMatrixBuilder laplacianBuilder) {
 
         final HashMap<Long, HashMap<Long,Double>> ratingStore = new HashMap<Long, HashMap<Long,Double>>();
         long maxUserId = 943;
@@ -31,6 +31,13 @@ public class UserCFDiffusionModelBuilder implements Provider<DiffusionModel> {
         //fill the utility matrix
         Cursor<Rating> ratings = dao.streamEvents(Rating.class);
         try {
+            /* We loop over all ratings.  The 'fast()' improves performance for the common case,
+             * when we will only work with the rating object inside the loop body.
+             *
+             * If the data set may have multiple ratings for the same (user,item) pair, this code
+             * will be not quite correct.
+             */
+
             for (Rating r: ratings.fast()) {
                 //System.out.print("   ");
                 if (!ratingStore.containsKey(r.getUserId())){
@@ -39,11 +46,13 @@ public class UserCFDiffusionModelBuilder implements Provider<DiffusionModel> {
                 ratingStore.get(r.getUserId()).put(r.getItemId(),r.getValue());
             }
         } finally {
+            // cursors must be closed
             ratings.close();
         }
 
         utility = VectorUtils.createUtilityMatrix((int) maxUserId, (int) maxItemId, ratingStore);
-        System.out.println("Utility matrix created");
+        System.out.println("Utility matrix created...normalizing...");
+        utility = normalizer.normalize(utility);
         //create a user-user similarity matrix (adjusted cosine)
         similarity = similarityBuilder.build(utility);
         System.out.println("Similarity Matrix created");
@@ -55,14 +64,12 @@ public class UserCFDiffusionModelBuilder implements Provider<DiffusionModel> {
         diffMatrix = MatrixUtils.createRealIdentityMatrix((int) maxUserId);
         diffMatrix = diffMatrix.add(L);
         diffMatrix = MatrixUtils.inverse(diffMatrix);
-        VectorUtils.saveToFile(diffMatrix, "matt.mat");
-
+        //VectorUtils.saveToFile(diffMatrix, "matt.mat");
 
     }
 
-
     @Override
-    public DiffusionModel get(){
-        return new DiffusionModel(diffMatrix);
+    public RealMatrix getDiffusionMatrix() {
+        return diffMatrix;
     }
 }

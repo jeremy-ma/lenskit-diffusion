@@ -37,7 +37,7 @@ public class ItemUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
             for (int j=0; j<numUsers; j++){
                 double entry = itemvector.getEntry(j);
                 if (entry > 0.0){
-                    itemvector.setEntry(j,entry-mean-globalMean);
+                    itemvector.setEntry(j,entry-mean);
                 }
             }
             utility.setColumnVector(i, itemvector);

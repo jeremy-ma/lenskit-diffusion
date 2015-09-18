@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 /**
  * Model builder that computes the global and item biases.
  */
-public class PrecomputedDiffusionModelBuilder implements Provider<DiffusionModel> {
+public class PrecomputedDiffusionModelBuilder implements DiffusionModel {
     private final EventDAO dao;
     private final String diffusionMatrixFileName;
     private static final String precomputedFilePath = "precomputed_matrices/";
@@ -32,7 +32,7 @@ public class PrecomputedDiffusionModelBuilder implements Provider<DiffusionModel
     }
 
     @Override
-    public DiffusionModel get() {
+    public RealMatrix getDiffusionMatrix() {
 
         // get the name of the input file
         //System.out.println(dao.toString());
@@ -70,6 +70,6 @@ public class PrecomputedDiffusionModelBuilder implements Provider<DiffusionModel
             System.out.println("Failed to read in the diffusion matrix");
         }
 
-        return new DiffusionModel(diffMatrix);
+        return diffMatrix;
     }
 }

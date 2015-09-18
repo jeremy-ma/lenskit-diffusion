@@ -17,16 +17,6 @@ public class UserUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
         int numUsers = utility.getRowDimension();
         int numItems = utility.getColumnDimension();
         //calculate global mean
-        double totalNumNonZero=0;
-        double total=0;
-
-        for (int i=0; i<numUsers;i++){
-            RealVector uvector = utility.getRowVector(i);
-            totalNumNonZero += (double) VectorUtils.countNonZero(uvector);
-            total += uvector.getL1Norm();
-        }
-
-        double globalMean = total / totalNumNonZero;
 
         //mean center the utility matrix (by user)
         for (int i=0; i<numUsers; i++){
@@ -35,7 +25,7 @@ public class UserUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
             for (int j=0; j<numItems; j++){
                 double entry = uvector.getEntry(j);
                 if (entry > 0.0){
-                    uvector.setEntry(j, entry - mean - globalMean);
+                    uvector.setEntry(j, entry - mean);
                 }
             }
             utility.setRowVector(i, uvector);

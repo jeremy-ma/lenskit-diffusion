@@ -19,14 +19,11 @@ public class VectorUtils {
 
     public static int countNonZero(RealVector v){
         int numNonZero = 0;
-        Iterator itr = v.iterator();
-        while(itr.hasNext()){
-            double val = (Double) itr.next();
-            if (val == 0.0){
+        for(int i=0; i< v.getDimension();i++){
+            if (v.getEntry(i) == 0.0){
                 numNonZero++;
             }
         }
-        System.out.println(numNonZero);
         return numNonZero;
     }
 
