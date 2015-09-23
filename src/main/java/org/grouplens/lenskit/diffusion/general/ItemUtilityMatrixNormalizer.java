@@ -27,7 +27,7 @@ public class ItemUtilityMatrixNormalizer implements UtilityMatrixNormalizer {
             totalNumNonZero += (double) VectorUtils.countNonZero(uvector);
             total += uvector.getL1Norm();
         }
-
+        //TODO: redo with global mean?
         double globalMean = total / totalNumNonZero;
 
         //mean center the utility matrix (by Item)

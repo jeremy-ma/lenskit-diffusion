@@ -39,7 +39,7 @@ public class DirectedItemItemSimilarityMatrixBuilder implements ItemItemSimilari
         }
 
         // A(i,j) = (i and j) / i
-        // number of movies watched by both i and j / number of movies watched by j
+        // number of users watching both i and j / number of users who watched j
 
         for (int i=0; i<numItems; i++){
             for (int j=0; j<numItems; j++){

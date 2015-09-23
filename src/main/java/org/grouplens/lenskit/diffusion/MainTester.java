@@ -24,10 +24,7 @@ package org.grouplens.lenskit.diffusion;
 import org.grouplens.lenskit.ItemScorer;
 import org.grouplens.lenskit.baseline.*;
 import org.grouplens.lenskit.core.LenskitConfiguration;
-import org.grouplens.lenskit.diffusion.ItemCF.CosineUserUserSimilarityMatrixBuilder;
-import org.grouplens.lenskit.diffusion.ItemCF.DirectedUserUserSimilarityMatrixBuilder;
-import org.grouplens.lenskit.diffusion.ItemCF.ItemCFDiffusionModel;
-import org.grouplens.lenskit.diffusion.ItemCF.UserUserSimilarityMatrixBuilder;
+import org.grouplens.lenskit.diffusion.ItemCF.*;
 import org.grouplens.lenskit.diffusion.UserCF.CosineItemItemSimilarityMatrixBuilder;
 import org.grouplens.lenskit.diffusion.UserCF.DirectedItemItemSimilarityMatrixBuilder;
 import org.grouplens.lenskit.diffusion.UserCF.ItemItemSimilarityMatrixBuilder;
@@ -358,6 +355,9 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval1(int numThreads, double alpha, double thresholdFraction){
+        /* itemUser normlization, itemCF, cosine similarity, cosine vector similarity */
+
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -407,6 +407,9 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval2(int numThreads, double alpha, double thresholdFraction){
+        /* itemUser normlization (doesn't matter), itemCF, directed usage similarity, cosine vector similarity */
+
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -452,6 +455,8 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval3(int numThreads, double alpha, double thresholdFraction){
+        /* itemUser normlization, userCF, cosine similarity, cosine vector similarity */
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -500,6 +505,9 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval4(int numThreads, double alpha, double thresholdFraction){
+        /* itemUser normlization (doesn't matter), userCF, directed usage similarity, cosine vector similarity */
+
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -548,6 +556,8 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval5(int numThreads, double alpha, double thresholdFraction){
+        /*no normalization, itemCF, cosine similarity, cosine vector similarity*/
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -595,6 +605,9 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval6(int numThreads, double alpha, double thresholdFraction){
+        /* no normlization, userCF, cosine similarity, cosine vector similarity */
+
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -643,6 +656,8 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval7(int numThreads, double alpha, double thresholdFraction){
+        /*normalize by user, UserCF, cosine similarity, vector cosine similarity*/
+
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -678,6 +693,212 @@ public class MainTester implements Runnable {
                 config_diff_n);
         AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity_useruserCF",
                 config_diff);
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_algo);
+
+        return simpleEval;
+    }
+
+    private SimpleEvaluator testEval8(int numThreads, double alpha, double thresholdFraction){
+        /* User normalization, itemCF, cosine similarity, cosine vector similarity */
+
+
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_itemCF(config_diff_n);
+        set_config_itemCF(config_diff);
+        set_config_itemCF(config_reg);
+
+        //set normalized settings
+        config_diff_n.set(Alpha_nL.class).to(alpha);
+        config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(UserUtilityMatrixNormalizer.class);
+
+        //set non-normalized settings
+        config_diff.set(Alpha_nL.class).to(alpha);
+        config_diff.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(UserUtilityMatrixNormalizer.class);
+        config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
+
+        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+        config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+
+
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF",
+                config_reg);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff_n);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff);
+
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_algo);
+
+        return simpleEval;
+    }
+
+    private SimpleEvaluator testEval9(int numThreads, double alpha, double thresholdFraction){
+        /* Item normalization, itemCF, cosine similarity, cosine vector similarity */
+
+
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_itemCF(config_diff_n);
+        set_config_itemCF(config_diff);
+        set_config_itemCF(config_reg);
+
+        //set normalized settings
+        config_diff_n.set(Alpha_nL.class).to(alpha);
+        config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(ItemUtilityMatrixNormalizer.class);
+
+        //set non-normalized settings
+        config_diff.set(Alpha_nL.class).to(alpha);
+        config_diff.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff.bind(UserUserSimilarityMatrixBuilder.class).to(CosineUserUserSimilarityMatrixBuilder.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(ItemUtilityMatrixNormalizer.class);
+        config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
+
+        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+        config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+
+
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF",
+                config_reg);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff_n);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff);
+
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_algo);
+
+        return simpleEval;
+    }
+
+    private SimpleEvaluator testEval10(int numThreads, double alpha, double thresholdFraction){
+        /*normalize by item, UserCF, cosine similarity, vector cosine similarity*/
+
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_userCF(config_diff_n);
+        set_config_userCF(config_diff);
+        set_config_userCF(config_reg);
+
+        //set normalized settings
+        config_diff_n.set(Alpha_nL.class).to(alpha);
+        config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(DiffusionModel.class).to(UserCFDiffusionModel.class);
+        config_diff_n.bind(ItemItemSimilarityMatrixBuilder.class).to(CosineItemItemSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(ItemUtilityMatrixNormalizer.class);
+        config_diff_n.bind(LaplacianMatrixBuilder.class).to(NormalizedLaplacianMatrixBuilder.class);
+
+        //set non-normalized settings
+        config_diff.set(Alpha_nL.class).to(alpha);
+        config_diff.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff.bind(DiffusionModel.class).to(UserCFDiffusionModel.class);
+        config_diff.bind(ItemItemSimilarityMatrixBuilder.class).to(CosineItemItemSimilarityMatrixBuilder.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(ItemUtilityMatrixNormalizer.class);
+        config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
+
+        //use cosine vector similarity
+        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+        config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_useruserCF",
+                config_reg);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarity_useruserCF",
+                config_diff_n);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarity_useruserCF",
+                config_diff);
+
+        //set to run with n threads
+        Properties EvalProps = new Properties();
+        EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
+        SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+        simpleEval.addAlgorithm(regular_algo);
+        simpleEval.addAlgorithm(diffusion_norm_algo);
+        simpleEval.addAlgorithm(diffusion_algo);
+
+        return simpleEval;
+    }
+
+    private SimpleEvaluator testEval11(int numThreads, double alpha, double thresholdFraction){
+        /* itemCF, pearsons correlation, cosine vector similarity */
+
+
+        LenskitConfiguration config_diff_n = new LenskitConfiguration();
+        LenskitConfiguration config_reg = new LenskitConfiguration();
+        LenskitConfiguration config_diff = new LenskitConfiguration();
+
+        set_config_itemCF(config_diff_n);
+        set_config_itemCF(config_diff);
+        set_config_itemCF(config_reg);
+
+        //set normalized settings
+        config_diff_n.set(Alpha_nL.class).to(alpha);
+        config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(PearsonCorrelationUserUserSimilarityMatrixBuilder.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(DoNothingUtilityMatrixNormalizer.class);
+
+        //set non-normalized settings
+        config_diff.set(Alpha_nL.class).to(alpha);
+        config_diff.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
+        config_diff.bind(UserUserSimilarityMatrixBuilder.class).to(PearsonCorrelationUserUserSimilarityMatrixBuilder.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(DoNothingUtilityMatrixNormalizer.class);
+        config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
+
+        config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
+        config_diff_n.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+        config_diff.bind(VectorSimilarity.class).to(DiffusedCosineVectorSimilarity.class);
+
+
+
+        AlgorithmInstance regular_algo = new AlgorithmInstance("regular_" + vectorSimilarityMeasure + "_similarity_itemitemCF",
+                config_reg);
+        AlgorithmInstance diffusion_norm_algo = new AlgorithmInstance("diffusion_norm_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff_n);
+        AlgorithmInstance diffusion_algo = new AlgorithmInstance("diffusion_" + vectorSimilarityMeasure + "_similarityitemitemCF",
+                config_diff);
+
 
         //set to run with n threads
         Properties EvalProps = new Properties();
@@ -733,17 +954,19 @@ public class MainTester implements Runnable {
         }
     }
 
+
+
     public void run() {
         System.out.println("Hi");
-        double alphas [] = {0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0};
-        double threshold_fractions [] = {0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8};
+        double alphas [] = {5.0,6.0,7.0,8.0,9.0};
+        double threshold_fractions [] = {0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8,0.9, 1.0};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){
                 SimpleEvaluator simpleEval;
 
                 //create evaluator object
-                simpleEval = testEval7(4, alpha, threshold_frac);
+                simpleEval = testEval10(4, alpha, threshold_frac);
 
                 //construct data source
                 File in = new File(dataFileName);
