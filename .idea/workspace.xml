@@ -2,16 +2,13 @@
 <project version="4">
   <component name="ArtifactsWorkspaceSettings">
     <artifacts-to-build>
-      <artifact name="lenskit-diffusion:jar2" />
+      <artifact name="lenskit-diffusion:jar" />
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0a96a486-b7af-41fd-98fb-1582f965fb74" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/PearsonCorrelationItemItemSimilarityMatrixBuilder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java" afterPath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUtilityMatrixNormalizer.java" afterPath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUtilityMatrixNormalizer.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java" afterPath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lenskit-diffusion.iml" afterPath="$PROJECT_DIR$/lenskit-diffusion.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helper.py" afterPath="$PROJECT_DIR$/helper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/artifacts/lenskit_diffusion_jar.xml" afterPath="$PROJECT_DIR$/.idea/artifacts/lenskit_diffusion_jar.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/run.py" afterPath="$PROJECT_DIR$/run.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -42,8 +39,8 @@
       <file leaf-file-name="MainTester.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.46884736" vertical-offset="2431" max-vertical-offset="3600">
-              <caret line="861" column="0" selection-start-line="861" selection-start-column="0" selection-end-line="861" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.9529781" vertical-offset="2917" max-vertical-offset="3885">
+              <caret line="1039" column="40" selection-start-line="1039" selection-start-column="40" selection-end-line="1039" selection-end-column="40" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#set_config_mean_predictor#0;class#MainTester#0" expanded="false" />
@@ -64,7 +61,28 @@
                 <element signature="method#testEval9#0;class#MainTester#0" expanded="false" />
                 <element signature="method#testEval10#0;class#MainTester#0" expanded="false" />
                 <element signature="method#testEval11#0;class#MainTester#0" expanded="false" />
+                <element signature="method#runsingle#0;class#MainTester#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DirectedItemItemSimilarityMatrixBuilder.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="855">
+              <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DirectedUserUserSimilarityMatrixBuilder.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/ItemCF/DirectedUserUserSimilarityMatrixBuilder.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="136" max-vertical-offset="855">
+              <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -73,7 +91,7 @@
         <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/PearsonCorrelationItemItemSimilarityMatrixBuilder.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="585">
-              <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+              <caret line="25" column="39" selection-start-line="25" selection-start-column="39" selection-end-line="25" selection-end-column="39" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -103,36 +121,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="VectorUtils.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/VectorUtils.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2160">
-              <caret line="25" column="9" selection-start-line="25" selection-start-column="9" selection-end-line="25" selection-end-column="9" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ItemUserUtilityMatrixNormalizer.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUserUtilityMatrixNormalizer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="269" max-vertical-offset="915">
-              <caret line="48" column="41" selection-start-line="48" selection-start-column="41" selection-end-line="48" selection-end-column="41" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ItemCFDiffusionModel.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/ItemCF/ItemCFDiffusionModel.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="225" max-vertical-offset="1035">
-              <caret line="53" column="70" selection-start-line="53" selection-start-column="70" selection-end-line="53" selection-end-column="70" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ItemUtilityMatrixNormalizer.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUtilityMatrixNormalizer.java">
           <provider selected="true" editor-type-id="text-editor">
@@ -148,8 +136,18 @@
       <file leaf-file-name="RegularLaplacianMatrixBuilder.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/RegularLaplacianMatrixBuilder.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="630">
-              <caret line="22" column="40" selection-start-line="22" selection-start-column="40" selection-end-line="22" selection-end-column="40" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="615">
+              <caret line="3" column="50" selection-start-line="3" selection-start-column="50" selection-end-line="3" selection-end-column="50" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ItemItemSimilarityMatrixBuilder.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/ItemItemSimilarityMatrixBuilder.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="240">
+              <caret line="8" column="48" selection-start-line="8" selection-start-column="48" selection-end-line="8" selection-end-column="48" />
               <folding />
             </state>
           </provider>
@@ -571,8 +569,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/hello/PrediffusedVectorSimilarity.java" />
-        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/hello/DiffusedUtilityModel.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/hello/TestItemItemScorer.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/hello/DoubleDiffusionItemScorer.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/hello/PrediffusedCosineVectorSimilarity.java" />
@@ -618,9 +614,11 @@
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/VectorUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUserUtilityMatrixNormalizer.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/UserUtilityMatrixNormalizer.java" />
-        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUtilityMatrixNormalizer.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/PearsonCorrelationItemItemSimilarityMatrixBuilder.java" />
+        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/RegularLaplacianMatrixBuilder.java" />
+        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java" />
+        <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/ItemCF/DirectedUserUserSimilarityMatrixBuilder.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java" />
       </list>
     </option>
@@ -628,7 +626,7 @@
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="1680" />
-    <option name="height" value="951" />
+    <option name="height" value="947" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -908,7 +906,7 @@
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../JMatIO-041212/lib/jmatio.jar!/" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.39770114" />
     <property name="recentsLimit" value="5" />
@@ -919,6 +917,13 @@
     <property name="OverrideImplement.overriding.sorted" value="false" />
     <property name="SearchEverywhereHistoryKey" value="show line &#9;null&#9;null" />
     <property name="FullScreen" value="false" />
+    <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
+    <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
+    <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
+    <property name="GenerateAntBuildDialog.backupFiles" value="true" />
+    <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
+    <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
+    <property name="GenerateAntBuildDialog.outputFileNameProperty" value="lenskit-diffusion" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -1282,7 +1287,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1680" height="951" extended-state="6" />
+    <frame x="0" y="23" width="1680" height="947" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1304,7 +1309,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3009768" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22002329" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22105263" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1331,7 +1336,21 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="15" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java</url>
+          <line>818</line>
+          <properties />
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java</url>
+          <line>767</line>
+          <properties />
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="27" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1508,13 +1527,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/ItemItemSimilarityMatrixBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="240">
-          <caret line="8" column="48" selection-start-line="8" selection-start-column="48" selection-end-line="8" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/precomputed/DiffusedUtilityModelBuilder.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="150" max-vertical-offset="1155">
@@ -1543,14 +1555,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.35958904" vertical-offset="0" max-vertical-offset="584">
           <caret line="15" column="0" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/ItemCF/DirectedUserUserSimilarityMatrixBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6660959" vertical-offset="1" max-vertical-offset="855">
-          <caret line="31" column="21" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
           <folding />
         </state>
       </provider>
@@ -1661,14 +1665,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/RegularLaplacianMatrixBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="630">
-          <caret line="22" column="40" selection-start-line="22" selection-start-column="40" selection-end-line="22" selection-end-column="40" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/ItemUserUtilityMatrixNormalizer.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="269" max-vertical-offset="915">
@@ -1695,14 +1691,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8411215" vertical-offset="0" max-vertical-offset="855">
-          <caret line="41" column="78" selection-start-line="41" selection-start-column="78" selection-end-line="41" selection-end-column="78" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/CosineItemItemSimilarityMatrixBuilder.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540">
@@ -1724,17 +1712,49 @@
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/PearsonCorrelationItemItemSimilarityMatrixBuilder.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="585">
-          <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+          <caret line="25" column="39" selection-start-line="25" selection-start-column="39" selection-end-line="25" selection-end-column="39" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/general/RegularLaplacianMatrixBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="615">
+          <caret line="3" column="50" selection-start-line="3" selection-start-column="50" selection-end-line="3" selection-end-column="50" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/ItemItemSimilarityMatrixBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="240">
+          <caret line="8" column="48" selection-start-line="8" selection-start-column="48" selection-end-line="8" selection-end-column="48" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/ItemCF/DirectedUserUserSimilarityMatrixBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1" max-vertical-offset="855">
+          <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/UserCF/DirectedItemItemSimilarityMatrixBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="855">
+          <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.46884736" vertical-offset="2431" max-vertical-offset="3600">
-          <caret line="861" column="0" selection-start-line="861" selection-start-column="0" selection-end-line="861" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.9529781" vertical-offset="2917" max-vertical-offset="3885">
+          <caret line="1039" column="40" selection-start-line="1039" selection-start-column="40" selection-end-line="1039" selection-end-column="40" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="method#set_config_mean_predictor#0;class#MainTester#0" expanded="false" />
@@ -1755,6 +1775,7 @@
             <element signature="method#testEval9#0;class#MainTester#0" expanded="false" />
             <element signature="method#testEval10#0;class#MainTester#0" expanded="false" />
             <element signature="method#testEval11#0;class#MainTester#0" expanded="false" />
+            <element signature="method#runsingle#0;class#MainTester#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1770,7 +1791,6 @@
             <option name="proportions">
               <list>
                 <option value="0.39770114" />
-                <option value="0.5" />
               </list>
             </option>
           </splitter-proportions>
