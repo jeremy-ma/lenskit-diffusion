@@ -19,7 +19,6 @@ public class RegularLaplacianMatrixBuilder implements LaplacianMatrixBuilder {
             double degree = v.getL1Norm(); //actually Dii + degree but cancels in next step
             v.mapMultiplyToSelf(-1.0);
             v.addToEntry(i, degree);
-
             laplacian.setRowVector(i,v);
         }
 

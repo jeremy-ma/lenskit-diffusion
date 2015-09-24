@@ -32,7 +32,7 @@ public class DirectedItemItemSimilarityMatrixBuilder implements ItemItemSimilari
                 items_to_users_watched.put(i, new HashSet<Integer>());
             }
             for (int j=0; j<numUsers;j++){
-                if (utility.getEntry(j,i) > 0.0){
+                if (utility.getEntry(j,i) != 0.0){
                     items_to_users_watched.get(i).add(j);
                 }
             }

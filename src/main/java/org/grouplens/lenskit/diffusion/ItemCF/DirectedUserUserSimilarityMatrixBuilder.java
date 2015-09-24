@@ -32,7 +32,7 @@ public class DirectedUserUserSimilarityMatrixBuilder implements UserUserSimilari
                 user_to_movies_watched.put(i,new HashSet<Integer>());
             }
             for (int j=0; j<numItems;j++){
-                if (utility.getEntry(i,j) > 0.0){
+                if (utility.getEntry(i,j) != 0.0){
                     user_to_movies_watched.get(i).add(j);
                 }
             }
