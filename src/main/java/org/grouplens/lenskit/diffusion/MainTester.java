@@ -1042,7 +1042,7 @@ public class MainTester implements Runnable {
                 simpleEval.addMetric(ndcg);
                 simpleEval.addMetric(mae);
 
-                File out = new File("cosine_" + "vectorsim_" + vectorSimilarityMeasure + "_threshold_" + Double.toString(threshold_frac) +
+                File out = new File("cos_" + "vectorsim_" + vectorSimilarityMeasure + "_threshold_" + Double.toString(threshold_frac) +
                                     "_alpha_" + Double.toString(alpha)+".csv");
                 simpleEval.setOutput(out);
 

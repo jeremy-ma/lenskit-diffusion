@@ -7,10 +7,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0a96a486-b7af-41fd-98fb-1582f965fb74" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java" afterPath="$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helper.py" afterPath="$PROJECT_DIR$/helper.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/artifacts/lenskit_diffusion_jar.xml" afterPath="$PROJECT_DIR$/.idea/artifacts/lenskit_diffusion_jar.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/run.py" afterPath="$PROJECT_DIR$/run.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="lenskit-diffusion.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -39,8 +38,8 @@
       <file leaf-file-name="MainTester.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.9529781" vertical-offset="2917" max-vertical-offset="3885">
-              <caret line="1039" column="40" selection-start-line="1039" selection-start-column="40" selection-end-line="1039" selection-end-column="40" />
+            <state vertical-scroll-proportion="0.4122257" vertical-offset="3082" max-vertical-offset="3885">
+              <caret line="1027" column="43" selection-start-line="1027" selection-start-column="43" selection-end-line="1027" selection-end-column="43" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#set_config_mean_predictor#0;class#MainTester#0" expanded="false" />
@@ -1753,8 +1752,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/grouplens/lenskit/diffusion/MainTester.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9529781" vertical-offset="2917" max-vertical-offset="3885">
-          <caret line="1039" column="40" selection-start-line="1039" selection-start-column="40" selection-end-line="1039" selection-end-column="40" />
+        <state vertical-scroll-proportion="0.4122257" vertical-offset="3082" max-vertical-offset="3885">
+          <caret line="1027" column="43" selection-start-line="1027" selection-start-column="43" selection-end-line="1027" selection-end-column="43" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="method#set_config_mean_predictor#0;class#MainTester#0" expanded="false" />
