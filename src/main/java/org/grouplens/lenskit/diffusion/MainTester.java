@@ -21,6 +21,7 @@
  */
 package org.grouplens.lenskit.diffusion;
 
+import org.apache.commons.lang3.builder.Diff;
 import org.grouplens.lenskit.ItemScorer;
 import org.grouplens.lenskit.baseline.*;
 import org.grouplens.lenskit.core.LenskitConfiguration;
@@ -38,6 +39,7 @@ import org.grouplens.lenskit.eval.metrics.predict.CoveragePredictMetric;
 import org.grouplens.lenskit.eval.metrics.predict.MAEPredictMetric;
 import org.grouplens.lenskit.eval.metrics.predict.NDCGPredictMetric;
 import org.grouplens.lenskit.eval.metrics.predict.RMSEPredictMetric;
+import org.grouplens.lenskit.eval.traintest.CachingDAOProvider;
 import org.grouplens.lenskit.eval.traintest.SimpleEvaluator;
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.DoubleDiffusionItemScorer;
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.PrediffusedItemCosineSimilarity;
@@ -407,7 +409,6 @@ public class MainTester implements Runnable {
     private SimpleEvaluator testEval2(int numThreads, double alpha, double thresholdFraction){
         /* no normalization (doesn't matter), itemCF, directed usage similarity, cosine vector similarity */
 
-
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -419,14 +420,17 @@ public class MainTester implements Runnable {
         //set normalized settings
         config_diff_n.set(Alpha_nL.class).to(alpha);
         config_diff_n.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff_n.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
         config_diff_n.bind(UserUserSimilarityMatrixBuilder.class).to(DirectedUserUserSimilarityMatrixBuilder.class);
-        config_diff_n.bind(UtilityMatrixNormalizer.class).to(ItemUserUtilityMatrixNormalizer.class);
+        config_diff_n.bind(UtilityMatrixNormalizer.class).to(DoNothingUtilityMatrixNormalizer.class);
+        config_diff_n.bind(LaplacianMatrixBuilder.class).to(NormalizedLaplacianMatrixBuilder.class);
 
         //set non-normalized settings
         config_diff.set(Alpha_nL.class).to(alpha);
         config_diff.set(ThresholdFraction.class).to(thresholdFraction);
+        config_diff.bind(DiffusionModel.class).to(ItemCFDiffusionModel.class);
         config_diff.bind(UserUserSimilarityMatrixBuilder.class).to(DirectedUserUserSimilarityMatrixBuilder.class);
-        config_diff.bind(UtilityMatrixNormalizer.class).to(ItemUserUtilityMatrixNormalizer.class);
+        config_diff.bind(UtilityMatrixNormalizer.class).to(DoNothingUtilityMatrixNormalizer.class);
         config_diff.bind(LaplacianMatrixBuilder.class).to(RegularLaplacianMatrixBuilder.class);
 
         config_reg.bind(VectorSimilarity.class).to(CosineVectorSimilarity.class);
@@ -913,7 +917,7 @@ public class MainTester implements Runnable {
     //run
     private SimpleEvaluator testEval12(int numThreads, double alpha, double thresholdFraction){
         /*no normalization, UserCF, pearson correlation, vector cosine similarity*/
-
+        System.out.println("Pearson Correlation UserCF cosine vectorsim");
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
         LenskitConfiguration config_reg = new LenskitConfiguration();
         LenskitConfiguration config_diff = new LenskitConfiguration();
@@ -1016,7 +1020,7 @@ public class MainTester implements Runnable {
                 SimpleEvaluator simpleEval;
 
                 //create evaluator object
-                simpleEval = testEval11(8, alpha, threshold_frac);
+                simpleEval = testEval12(8, alpha, threshold_frac);
 
                 //construct data source
                 File in = new File(dataFileName);
