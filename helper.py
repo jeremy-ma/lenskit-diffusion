@@ -482,14 +482,8 @@ if __name__=='__main__':
 
     utility = create_utility_matrix('ml-100k/u.data', defaultNumUsers, defaultNumItems, file_delimiter='\t')
 
-    print "creating old"
-    sim = create_similarity_adjusted_cosine_old(utility.copy())
-    print "creating new"
-    sim_new = create_similarity_adjusted_cosine(utility)
-
-    #TODO: Problem was vectorised solution centered on user but then calculated useruser similarity and vice verse
-    # refactor
-    pdb.set_trace()
+    scipy.io.savemat('ml100k_utility.mat',mdict={'utility':utility})
+    
 
 
 

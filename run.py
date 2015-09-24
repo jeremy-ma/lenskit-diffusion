@@ -198,8 +198,8 @@ def analyse_csv(regular_algo_suffix='_itemitemCF'):
 
 
 
-def analyse_csv_java(regular_algo_suffix='_itemitemCF', vector_similarity_funcs=['cosine'], thresholds = [0.1,0.2,0.3], 
-                     alphas=[0.5, 1.0,2.0]):
+def analyse_csv_java(regular_algo_suffix='_itemitemCF', vector_similarity_funcs=['cosine'], thresholds = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,1.0], 
+                     alphas=[0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0]):
     # analyse the csv files
     printer = pprint.PrettyPrinter(indent=4)
 
@@ -212,7 +212,7 @@ def analyse_csv_java(regular_algo_suffix='_itemitemCF', vector_similarity_funcs=
             first = True
 
             for alpha_nL in alphas:
-                resultFileName = "undircosine_"  + "vectorsim_" + vectorfunc + "_" + "threshold_" + str(threshold) + "_alpha_" + str(alpha_nL) + ".csv"
+                resultFileName = "adjcosine_"  + "vectorsim_" + vectorfunc + "_" + "threshold_" + str(threshold) + "_alpha_" + str(alpha_nL) + ".csv"
                 with open(resultFileName) as fi:
                     reader = csv.reader(fi)
                     result_matrix = []
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     #run_test_set_partitions(threshold_fraction=0.06, CF='item')
     
 
-    analyse_csv_java('_itemitemCF')
+    analyse_csv_java('_useruserCF')
 
 
     # diffuse_utility(5, 1.0, 0.08, 'adjusted_cosine')

@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="lenskit-diffusion:jar">
+  <artifact type="jar" name="lenskit-diffusion:jar">
     <output-path>$PROJECT_DIR$/build/classes/artifacts/lenskit_diffusion_jar</output-path>
     <root id="archive" name="lenskit-diffusion.jar">
       <element id="module-output" name="lenskit-diffusion" />

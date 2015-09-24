@@ -405,7 +405,6 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
-    //rerun
     private SimpleEvaluator testEval2(int numThreads, double alpha, double thresholdFraction){
         /* no normalization (doesn't matter), itemCF, directed usage similarity, cosine vector similarity */
 
@@ -506,7 +505,6 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
-    //rerun
     private SimpleEvaluator testEval4(int numThreads, double alpha, double thresholdFraction){
         /* no normalization (doesn't matter), userCF, directed usage similarity, cosine vector similarity */
 
@@ -607,7 +605,6 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
-    //rerun
     private SimpleEvaluator testEval6(int numThreads, double alpha, double thresholdFraction){
         /* no normalization, userCF, cosine similarity, cosine vector similarity */
 
@@ -914,7 +911,6 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
-    //run
     private SimpleEvaluator testEval12(int numThreads, double alpha, double thresholdFraction){
         /*no normalization, UserCF, pearson correlation, vector cosine similarity*/
         System.out.println("Pearson Correlation UserCF cosine vectorsim");
@@ -1013,14 +1009,14 @@ public class MainTester implements Runnable {
     public void run() {
         System.out.println("Hi");
         double alphas [] = {0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0};
-        double threshold_fractions [] = {0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8,0.9, 1.0};
+        double threshold_fractions [] = {1.0};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){
                 SimpleEvaluator simpleEval;
 
                 //create evaluator object
-                simpleEval = testEval12(8, alpha, threshold_frac);
+                simpleEval = testEval6(8, alpha, threshold_frac);
 
                 //construct data source
                 File in = new File(dataFileName);
@@ -1042,7 +1038,7 @@ public class MainTester implements Runnable {
                 simpleEval.addMetric(ndcg);
                 simpleEval.addMetric(mae);
 
-                File out = new File("cos_" + "vectorsim_" + vectorSimilarityMeasure + "_threshold_" + Double.toString(threshold_frac) +
+                File out = new File("cosinenonnormalized_" + "vectorsim_" + vectorSimilarityMeasure + "_threshold_" + Double.toString(threshold_frac) +
                                     "_alpha_" + Double.toString(alpha)+".csv");
                 simpleEval.setOutput(out);
 
