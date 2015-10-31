@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/lenskit-diffusion.iml" filepath="$PROJECT_DIR$/lenskit-diffusion.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lenskit-diffusion.iml" filepath="$PROJECT_DIR$/lenskit-diffusion.iml" />
     </modules>
   </component>
 </project>
