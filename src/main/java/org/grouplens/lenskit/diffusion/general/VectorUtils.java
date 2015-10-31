@@ -3,9 +3,12 @@ package org.grouplens.lenskit.diffusion.general;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLDouble;
+import it.unimi.dsi.fastutil.longs.LongSortedSet;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.grouplens.lenskit.vectors.MutableSparseVector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -144,4 +147,16 @@ public class VectorUtils {
         return utility;
 
     }
+
+    public static RealVector toRealVector(int numItems, MutableSparseVector uvector){
+        RealVector v = new ArrayRealVector(numItems);
+        LongSortedSet s = uvector.keySet();
+        for (int i=0; i<numItems; i++){
+            if (s.contains((long) (i+1))){
+                v.setEntry(i,uvector.get((long) (i+1)));
+            }
+        }
+        return v;
+    }
+
 }

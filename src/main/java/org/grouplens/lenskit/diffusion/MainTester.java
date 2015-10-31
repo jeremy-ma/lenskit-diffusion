@@ -25,6 +25,8 @@ import org.apache.commons.lang3.builder.Diff;
 import org.grouplens.lenskit.ItemScorer;
 import org.grouplens.lenskit.baseline.*;
 import org.grouplens.lenskit.core.LenskitConfiguration;
+import org.grouplens.lenskit.data.pref.PreferenceDomain;
+import org.grouplens.lenskit.data.pref.PreferenceDomainBuilder;
 import org.grouplens.lenskit.diffusion.ItemCF.*;
 import org.grouplens.lenskit.diffusion.UserCF.*;
 import org.grouplens.lenskit.diffusion.general.*;
@@ -45,15 +47,20 @@ import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.Do
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.PrediffusedItemCosineSimilarity;
 import org.grouplens.lenskit.diffusion.org.grouplens.lenskit.diffusion.unused.PrediffusedUserCosineSimilarity;
 import org.grouplens.lenskit.iterative.IterationCount;
+import org.grouplens.lenskit.iterative.RegularizationTerm;
 import org.grouplens.lenskit.knn.NeighborhoodSize;
 import org.grouplens.lenskit.knn.item.ItemItemScorer;
 import org.grouplens.lenskit.knn.item.ItemSimilarity;
+import org.grouplens.lenskit.knn.item.WeightedAverageNeighborhoodScorer;
 import org.grouplens.lenskit.knn.user.NeighborFinder;
 import org.grouplens.lenskit.knn.user.SnapshotNeighborFinder;
 import org.grouplens.lenskit.knn.user.UserSimilarity;
 import org.grouplens.lenskit.knn.user.UserUserItemScorer;
 import org.grouplens.lenskit.mf.funksvd.FeatureCount;
 import org.grouplens.lenskit.mf.funksvd.FunkSVDItemScorer;
+import org.grouplens.lenskit.slopeone.DeviationDamping;
+import org.grouplens.lenskit.slopeone.SlopeOneItemScorer;
+import org.grouplens.lenskit.slopeone.WeightedSlopeOneItemScorer;
 import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer;
 import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
 import org.grouplens.lenskit.vectors.similarity.*;
@@ -73,6 +80,7 @@ public class MainTester implements Runnable {
         MainTester hello = new MainTester(args);
         System.out.println("Hellooo");
         try {
+            //runsingle();
             hello.run();
         } catch (RuntimeException e) {
             System.err.println(e.toString());
@@ -114,9 +122,18 @@ public class MainTester implements Runnable {
 
     private void set_config_FunkSVD(LenskitConfiguration config){
         config.bind(ItemScorer.class).to(FunkSVDItemScorer.class);
-        config.set(IterationCount.class).to(150); // these settings were used in kluver paper
+
+        config.set(IterationCount.class).to(150); // defaults (slightly changed from kluver paper)
         config.set(MeanDamping.class).to(5.0);
-        config.set(FeatureCount.class).to(30);
+        //config.set(FeatureCount.class).to(45);
+        //config.set(RegularizationTerm.class).to(0.0005);
+
+        /*
+        config.set(IterationCount.class).to(itercount); // these settings were used in kluver paper
+        config.set(MeanDamping.class).to(meanDamping);
+        config.set(FeatureCount.class).to(featureCount);
+        config.set(RegularizationTerm.class).to(regularizationTerm);
+        */
         config.bind(BaselineScorer.class, ItemScorer.class)
                         .to(UserMeanItemScorer.class);
         config.bind(UserMeanBaseline.class, ItemScorer.class)
@@ -342,10 +359,14 @@ public class MainTester implements Runnable {
         return simpleEval;
     }
 
-    private SimpleEvaluator SVDEval(int numThreads){
+    private SimpleEvaluator SVDEval(int numThreads,
+                                    int featureCount, double regularizationTerm){
         LenskitConfiguration config_svd = new LenskitConfiguration();
         set_config_FunkSVD(config_svd);
-        AlgorithmInstance svd_alg = new AlgorithmInstance("SVD_iteration150_meandamping5_featurecount30",config_svd);
+        config_svd.set(RegularizationTerm.class).to(regularizationTerm);
+        config_svd.set(FeatureCount.class).to(featureCount);
+
+        AlgorithmInstance svd_alg = new AlgorithmInstance("SVD_iteration150_meandamping5_featurecount"+String.valueOf(featureCount), config_svd);
         Properties EvalProps = new Properties();
         EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(numThreads));
         SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
@@ -354,7 +375,7 @@ public class MainTester implements Runnable {
     }
 
     private SimpleEvaluator testEval1(int numThreads, double alpha, double thresholdFraction){
-        /* itemUser normlization, itemCF, cosine similarity, cosine vector similarity */
+        /* itemUser normalization, itemCF, cosine similarity, cosine vector similarity */
 
 
         LenskitConfiguration config_diff_n = new LenskitConfiguration();
@@ -965,58 +986,125 @@ public class MainTester implements Runnable {
 
     public MainTester(String[] args) {
         System.out.println("hello");
-
+        //runslopeOne();
     }
 
     public void runsingle(){
         SimpleEvaluator simpleEval;
         System.out.println("SVD!!!");
-        //create evaluator object
-        simpleEval = SVDEval(4);
 
-        //construct data source
-        File in = new File(dataFileName);
-        CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
-        builder.setDelimiter("\t");
-        CSVDataSource dat = builder.build();
+        /*
+        config.set(FeatureCount.class).to(45);
+        config.set(RegularizationTerm.class).to(0.0005);
+         */
+        int featureCounts [] = {55,60,65,70};
+        double regularizations [] = {0.0001,0.0005,0.001};
 
-        //use 5-fold CV
-        simpleEval.addDataset(dat,5);
+        for (int featureCount:featureCounts){
+            for (double reg:regularizations){
+                //create evaluator object
+                simpleEval = SVDEval(4,featureCount,reg);
 
-        //Add metrics
-        RMSEPredictMetric rmse = new RMSEPredictMetric();
-        CoveragePredictMetric cover = new CoveragePredictMetric();
-        NDCGPredictMetric ndcg = new NDCGPredictMetric();
-        MAEPredictMetric mae = new MAEPredictMetric();
+                //construct data source
+                File in = new File(dataFileName);
+                CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
+                builder.setDelimiter("\t");
+                CSVDataSource dat = builder.build();
 
-        simpleEval.addMetric(rmse);
-        simpleEval.addMetric(cover);
-        simpleEval.addMetric(ndcg);
-        simpleEval.addMetric(mae);
+                //use 5-fold CV
+                simpleEval.addDataset(dat,5);
 
-        File out = new File("SVD_results.csv");
-        simpleEval.setOutput(out);
+                //Add metrics
+                RMSEPredictMetric rmse = new RMSEPredictMetric();
+                CoveragePredictMetric cover = new CoveragePredictMetric();
+                NDCGPredictMetric ndcg = new NDCGPredictMetric();
+                MAEPredictMetric mae = new MAEPredictMetric();
 
-        try{
-            simpleEval.call();
-        } catch (Exception e){
-            System.out.println(e.getMessage());
+                simpleEval.addMetric(rmse);
+                simpleEval.addMetric(cover);
+                simpleEval.addMetric(ndcg);
+                simpleEval.addMetric(mae);
+
+                File out = new File("SVD_results" + "reg" + String.valueOf(featureCount) + "_featcount"+String.valueOf(reg)+ ".csv");
+                simpleEval.setOutput(out);
+
+                try{
+                    simpleEval.call();
+                } catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
+            }
         }
+
+
     }
 
+    public void runslopeOne(){
 
+        double dampings [] = {1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5};
+        for (double damping:dampings){
+            LenskitConfiguration slope_config = new LenskitConfiguration();
+            slope_config.bind(ItemScorer.class).to(SlopeOneItemScorer.class);
+            slope_config.bind(SlopeOneItemScorer.class).to(WeightedSlopeOneItemScorer.class);
+            slope_config.bind(BaselineScorer.class, ItemScorer.class).to(UserMeanItemScorer.class);
+            slope_config.bind(UserMeanBaseline.class, ItemScorer.class).to(ItemMeanRatingItemScorer.class);
+            slope_config.set(DeviationDamping.class).to(damping);
+
+            AlgorithmInstance slopeone = new AlgorithmInstance("WeightedSlopeOne"+String.valueOf(damping), slope_config);
+            Properties EvalProps = new Properties();
+            EvalProps.setProperty(EvalConfig.THREAD_COUNT_PROPERTY, Integer.toString(4));
+            SimpleEvaluator simpleEval = new SimpleEvaluator(EvalProps);
+            simpleEval.addAlgorithm(slopeone);
+
+            //construct data source
+            File in = new File(dataFileName);
+            CSVDataSourceBuilder builder = new CSVDataSourceBuilder(in);
+            builder.setDelimiter("\t");
+            CSVDataSource dat = builder.build();
+
+            //use 5-fold CV
+            simpleEval.addDataset(dat,5);
+
+            //Add metrics
+            RMSEPredictMetric rmse = new RMSEPredictMetric();
+            CoveragePredictMetric cover = new CoveragePredictMetric();
+            NDCGPredictMetric ndcg = new NDCGPredictMetric();
+            MAEPredictMetric mae = new MAEPredictMetric();
+
+            /*
+            slope_config.bind(PreferenceDomain.class).to(new PreferenceDomainBuilder(1, 5)
+                    .setPrecision(1)
+                    .build());
+            */
+            simpleEval.addMetric(rmse);
+            simpleEval.addMetric(cover);
+            simpleEval.addMetric(ndcg);
+            simpleEval.addMetric(mae);
+
+            File out = new File("WeightedSlopeOne_results" + "deviationdamping_" + String.valueOf(damping) + ".csv");
+            simpleEval.setOutput(out);
+
+            try{
+                simpleEval.call();
+            } catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+
+        }
+
+    }
 
     public void run() {
         System.out.println("Hi");
-        double alphas [] = {0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0};
-        double threshold_fractions [] = {1.0};
+        double alphas [] = {0.5};
+        double threshold_fractions [] = {0.1,1.0};
 
         for (double alpha:alphas){
             for (double threshold_frac:threshold_fractions){
                 SimpleEvaluator simpleEval;
 
                 //create evaluator object
-                simpleEval = testEval6(8, alpha, threshold_frac);
+                simpleEval = testEval4(8, alpha, threshold_frac);
 
                 //construct data source
                 File in = new File(dataFileName);
