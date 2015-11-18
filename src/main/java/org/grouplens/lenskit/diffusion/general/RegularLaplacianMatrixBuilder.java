@@ -24,7 +24,6 @@ public class RegularLaplacianMatrixBuilder implements LaplacianMatrixBuilder {
 
         double diagonalSum = 0;
 
-
         //convert alpha from normalized to unnormalized
         for (int i=0; i<dimension; i++){
             diagonalSum += laplacian.getEntry(i,i);

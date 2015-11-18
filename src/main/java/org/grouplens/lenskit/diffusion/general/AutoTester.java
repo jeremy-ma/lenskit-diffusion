@@ -38,7 +38,7 @@ public class AutoTester {
 
 
     public static void main(String[] args) {
-        //itemCFEval();
+        itemCFEval();
         userCFEval();
         //iterativeDiffusionEval();
 
@@ -52,7 +52,7 @@ public class AutoTester {
                 DirectedUserUserSimilarityMatrixBuilder.class, PearsonCorrelationUserUserSimilarityMatrixBuilder.class};
         Class normalizers [] = {DoNothingUtilityMatrixNormalizer.class, UserUtilityMatrixNormalizer.class,
                                 DoNothingUtilityMatrixNormalizer.class, DoNothingUtilityMatrixNormalizer.class};
-        Class laplacians [] = {NormalizedLaplacianMatrixBuilder.class, LaplacianMatrixBuilder.class};
+        Class laplacians [] = {/*NormalizedLaplacianMatrixBuilder.class,*/ RegularLaplacianMatrixBuilder.class};
         int neighbourhoodsizes []= {30};
         double meanDamping = 5.0;
         /*
@@ -65,6 +65,7 @@ public class AutoTester {
         parameters for regular diffusion
          */
         double regular_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
+        //double regular_alphas [] = {13.0,14.0,15.0,16.0,};
         double regular_thresholds [] = {1.0};
 
         double alphas [];
@@ -85,7 +86,8 @@ public class AutoTester {
                     alphas = regular_alphas;
                     thresholds = regular_thresholds;
                 }
-                search.runWithParameters(neighbourhoodsizes, alphas,thresholds,new Double(0.8));
+                System.out.println("ItemItemScorer: "+similaritytypes[i].toString()+" "+normalizers[i].toString());
+                search.runWithParameters(neighbourhoodsizes, alphas,thresholds,null);
 
             }
         }
@@ -99,28 +101,33 @@ public class AutoTester {
 userCF all tests
  */
     private static void userCFEval(){
-        /*
-        Class similaritytypes [] = {CosineItemItemSimilarityMatrixBuilder.class, CosineItemItemSimilarityMatrixBuilder.class,
-                DirectedItemItemSimilarityMatrixBuilder.class, PearsonCorrelationItemItemSimilarityMatrixBuilder.class};
-        Class normalizers [] = {DoNothingUtilityMatrixNormalizer.class, UserUtilityMatrixNormalizer.class,
-                DoNothingUtilityMatrixNormalizer.class, DoNothingUtilityMatrixNormalizer.class};
-        */
-        Class similaritytypes [] = {CosineItemItemSimilarityMatrixBuilder.class,PearsonCorrelationItemItemSimilarityMatrixBuilder.class};
-        Class normalizers [] = {UserUtilityMatrixNormalizer.class, DoNothingUtilityMatrixNormalizer.class};
-        Class laplacians [] = {NormalizedLaplacianMatrixBuilder.class, LaplacianMatrixBuilder.class};
+
+        Class similaritytypes [] = {/*CosineItemItemSimilarityMatrixBuilder.class, CosineItemItemSimilarityMatrixBuilder.class,
+                DirectedItemItemSimilarityMatrixBuilder.class,*/ PearsonCorrelationItemItemSimilarityMatrixBuilder.class};
+        Class normalizers [] = {/*DoNothingUtilityMatrixNormalizer.class, UserUtilityMatrixNormalizer.class,
+                DoNothingUtilityMatrixNormalizer.class,*/ DoNothingUtilityMatrixNormalizer.class};
+
+
+
+        //Class similaritytypes [] = {/*CosineItemItemSimilarityMatrixBuilder.class,*/PearsonCorrelationItemItemSimilarityMatrixBuilder.class};
+        //Class normalizers [] = {/*UserUtilityMatrixNormalizer.class,*/ DoNothingUtilityMatrixNormalizer.class};
+
+        Class laplacians [] = {/*NormalizedLaplacianMatrixBuilder.class, */RegularLaplacianMatrixBuilder.class};
         int neighbourhoodsizes []= {30};
         double meanDamping = 5.0;
         /*
         parameters for normalised diffusion
          */
-        double normalized_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
-        double normalized_thresholds [] = {0.05,0.075,0.1,0.125,0.15};
-
+        //double normalized_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
+        //double normalized_thresholds [] = {0.05,0.075,0.1,0.125,0.15};
+        double normalized_alphas [] = {4.0};
+        double normalized_thresholds [] = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0};
         /*
         parameters for regular diffusion
          */
-        double regular_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
-        double regular_thresholds [] = {1.0};
+        //double regular_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
+        double regular_alphas [] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0};
+        double regular_thresholds [] = {0.1};
 
         double alphas [];
         double thresholds [];
@@ -141,6 +148,7 @@ userCF all tests
                     alphas = regular_alphas;
                     thresholds = regular_thresholds;
                 }
+                System.out.println("UserUserScorer: "+similaritytypes[i].toString()+" "+normalizers[i].toString());
                 search.runWithParameters(neighbourhoodsizes, alphas,thresholds,new Double(0.8));
 
             }
